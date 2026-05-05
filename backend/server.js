@@ -10,16 +10,15 @@ const expenseRoutes = require('./routes/expenseRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const cartRoutes = require('./routes/cartRoutes');
 
+const morgan = require('morgan');
+const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('✅ MongoDB connected successfully!'))
-  .catch(err => console.log('❌ MongoDB connection error:', err.message));
-
 // Middleware
 app.use(express.json());
+app.use(cors());
+app.use(morgan('dev'));
 
 // Routes
 app.get('/', (req, res) => {
@@ -35,7 +34,23 @@ app.use('/api/expenses', expenseRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/cart', cartRoutes);
 
-// Start Server
-app.listen(PORT, () => {
-  console.log(`🚀 Server is running on port ${PORT}`);
-});
+// Connect to MongoDB
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => {
+    console.log('✅ MongoDB connected successfully!');
+    // Start Server only after DB connection
+    app.listen(PORT, () => {
+      console.log(`🚀 Server is running on port ${PORT}`);
+    });
+  })
+  .catch(async err => {
+    console.error('❌ MongoDB connection error:', err.message);
+    try {
+      const { execSync } = require('child_process');
+      const ip = execSync('curl -s ifconfig.me').toString().trim();
+      console.log(`👉 Please whitelist this IP in MongoDB Atlas: ${ip}`);
+    } catch (ipErr) {
+      console.log('👉 Please check your MongoDB Atlas IP whitelist.');
+    }
+    process.exit(1);
+  });

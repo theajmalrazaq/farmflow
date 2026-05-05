@@ -7,6 +7,7 @@ const orderRoutes = require('./routes/orderRoutes');
 const cropRoutes = require('./routes/cropRoutes');
 const inventoryRoutes = require('./routes/inventoryRoutes');
 const expenseRoutes = require('./routes/expenseRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -30,6 +31,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/crops', cropRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/expenses', expenseRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Start Server
 app.listen(PORT, () => {

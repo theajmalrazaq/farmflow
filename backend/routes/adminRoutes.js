@@ -8,6 +8,7 @@ const {
   getInventoryAnalytics,
   getExpenseAnalytics,
   updateOrderStatus,
+  getFarmerDashboardStats,
 } = require('../controllers/adminController');
 const auth = require('../middleware/auth');
 
@@ -15,6 +16,7 @@ const auth = require('../middleware/auth');
 // In a real app, you'd add a check to ensure user is admin role
 
 router.get('/dashboard', auth, getDashboardStats);
+router.get('/farmer/dashboard', auth, getFarmerDashboardStats);
 router.get('/sales-analytics', auth, getSalesAnalytics);
 router.get('/customers', auth, getAllCustomers);
 router.get('/farmers', auth, getAllFarmers);

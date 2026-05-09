@@ -24,6 +24,21 @@ const userSchema = new mongoose.Schema({
   farmName: {
     type: String,
   },
+  farmSlug: {
+    type: String,
+    unique: true,
+    sparse: true,
+    lowercase: true,
+  },
+  farmDescription: {
+    type: String,
+  },
+  logo: {
+    type: String,
+  },
+  coverImage: {
+    type: String,
+  },
   phone: String,
   address: String,
   createdAt: {

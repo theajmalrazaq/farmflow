@@ -7,12 +7,9 @@ const {
   updateProduct,
   deleteProduct,
   addReview,
+  approveProduct,
 } = require('../controllers/productController');
-const auth = require('../middleware/auth');
-
-// Public routes
-router.get('/', getAllProducts);
-router.get('/:id', getProductById);
+const { auth } = require('../middleware/auth');
 
 // Protected routes (farmer can create/update/delete products)
 router.post('/', auth, createProduct);
@@ -21,5 +18,8 @@ router.delete('/:id', auth, deleteProduct);
 
 // Add review (authenticated users)
 router.post('/:id/review', auth, addReview);
+
+// Admin routes
+router.put('/:id/approve', approveProduct);
 
 module.exports = router;

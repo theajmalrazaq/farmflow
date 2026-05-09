@@ -11,7 +11,7 @@ const generateToken = (id) => {
 // Register User
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, role, farmName } = req.body;
+    const { name, email, password, role, farmName, address, coverImage, logo } = req.body;
 
     // Validation
     if (!name || !email || !password) {
@@ -24,6 +24,17 @@ exports.register = async (req, res) => {
       return res.status(400).json({ message: 'Email already registered' });
     }
 
+    // Generate farm slug if farmer
+    let farmSlug = undefined;
+    if (role === 'farmer' && farmName) {
+      farmSlug = farmName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+      // Check if slug exists, append random string if it does
+      const existingSlug = await User.findOne({ farmSlug });
+      if (existingSlug) {
+        farmSlug += `-${Math.floor(Math.random() * 1000)}`;
+      }
+    }
+
     // Create user
     const user = await User.create({
       name,
@@ -31,6 +42,10 @@ exports.register = async (req, res) => {
       password,
       role: role || 'customer',
       farmName: role === 'farmer' ? farmName : undefined,
+      farmSlug,
+      address: role === 'farmer' ? address : undefined,
+      coverImage: role === 'farmer' ? coverImage : undefined,
+      logo: role === 'farmer' ? logo : undefined,
     });
 
     // Generate token
@@ -44,6 +59,7 @@ exports.register = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        farmSlug: user.farmSlug,
       },
     });
   } catch (error) {
@@ -84,6 +100,7 @@ exports.login = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        farmSlug: user.farmSlug,
       },
     });
   } catch (error) {
@@ -94,10 +111,97 @@ exports.login = async (req, res) => {
 // Get Current User
 exports.getCurrentUser = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user.id).select('-password');
     res.status(200).json({
       success: true,
-      user,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        farmName: user.farmName,
+        farmSlug: user.farmSlug,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Update User Profile
+exports.updateProfile = async (req, res) => {
+  try {
+    const { name, address, coverImage, farmName, farmDescription, logo } = req.body;
+    
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (name) user.name = name;
+    if (address) user.address = address;
+    if (coverImage) user.coverImage = coverImage;
+    if (farmName) user.farmName = farmName;
+    if (farmDescription) user.farmDescription = farmDescription;
+    if (logo) user.logo = logo;
+
+    // Regenerate slug if farm name changed
+    if (farmName && user.role === 'farmer') {
+      user.farmSlug = farmName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+      const existingSlug = await User.findOne({ farmSlug: user.farmSlug, _id: { $ne: user._id } });
+      if (existingSlug) {
+        user.farmSlug += `-${Math.floor(Math.random() * 1000)}`;
+      }
+    }
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        address: user.address,
+        coverImage: user.coverImage,
+        farmName: user.farmName,
+        farmSlug: user.farmSlug
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Change Password
+exports.changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: 'Please provide both current and new passwords' });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Check current password
+    const isMatch = await user.matchPassword(currentPassword);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Incorrect current password' });
+    }
+
+    // Set new password (the model should handle hashing if it has a pre-save hook)
+    user.password = newPassword;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Password changed successfully'
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

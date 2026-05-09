@@ -7,6 +7,9 @@ exports.getAllProducts = async (req, res) => {
 
     // Build filter
     let filter = {};
+    if (req.query.mine === 'true' && req.user) {
+      filter.farmer = req.user.id;
+    }
     if (category) filter.category = category;
     if (minPrice || maxPrice) {
       filter.price = {};
@@ -21,7 +24,7 @@ exports.getAllProducts = async (req, res) => {
     }
 
     const products = await Product.find(filter)
-      .populate('farmer', 'name farmName email')
+      .populate('farmer', 'name farmName email farmSlug')
       .sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -168,6 +171,28 @@ exports.addReview = async (req, res) => {
     res.status(201).json({
       success: true,
       message: 'Review added',
+      product,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+// Approve product (SuperAdmin)
+exports.approveProduct = async (req, res) => {
+  try {
+    const product = await Product.findByIdAndUpdate(
+      req.params.id,
+      { status: 'approved' },
+      { new: true }
+    );
+
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Product approved successfully',
       product,
     });
   } catch (error) {

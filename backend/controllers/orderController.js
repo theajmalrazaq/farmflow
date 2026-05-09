@@ -1,5 +1,6 @@
 const Order = require('../models/Order');
 const Product = require('../models/Product');
+const Notification = require('../models/Notification');
 
 // Create order
 exports.createOrder = async (req, res) => {
@@ -17,6 +18,7 @@ exports.createOrder = async (req, res) => {
     // Calculate total price and validate products
     let totalPrice = 0;
     const orderItems = [];
+    const farmerIds = new Set();
 
     for (let item of items) {
       const product = await Product.findById(item.product);
@@ -36,6 +38,8 @@ exports.createOrder = async (req, res) => {
         price: product.price,
       });
 
+      farmerIds.add(product.farmer.toString());
+
       // Reduce product quantity
       product.quantity -= item.quantity;
       await product.save();
@@ -48,6 +52,17 @@ exports.createOrder = async (req, res) => {
       deliveryAddress,
       notes,
     });
+
+    // Create notifications for each farmer
+    for (const farmerId of farmerIds) {
+      await Notification.create({
+        recipient: farmerId,
+        type: 'ORDER_PLACED',
+        title: 'New Order Received',
+        message: `New Order #${order._id.toString().slice(-6)} received with ${order.items.length} items. Total value: Rs. ${order.totalPrice.toLocaleString()}`,
+        relatedId: order._id
+      });
+    }
 
     await order.populate('items.product', 'name price image');
     await order.populate('customer', 'name email phone');
@@ -172,13 +187,30 @@ exports.cancelOrder = async (req, res) => {
   }
 };
 
-// Get all orders (admin only)
+// Get orders (farmers see only their own, admin sees all)
 exports.getAllOrders = async (req, res) => {
   try {
-    const orders = await Order.find()
-      .populate('customer', 'name email')
-      .populate('items.product', 'name price')
-      .sort({ createdAt: -1 });
+    let orders;
+
+    if (req.user.role === 'admin') {
+      // Admin sees all orders
+      orders = await Order.find()
+        .populate('customer', 'name email phone')
+        .populate('items.product', 'name price image farmer')
+        .sort({ createdAt: -1 });
+    } else {
+      // Farmer: find products that belong to this farmer
+      const farmerProducts = await Product.find({ farmer: req.user.id }).select('_id');
+      const farmerProductIds = farmerProducts.map(p => p._id);
+
+      // Find orders that contain at least one of this farmer's products
+      orders = await Order.find({
+        'items.product': { $in: farmerProductIds }
+      })
+        .populate('customer', 'name email phone')
+        .populate('items.product', 'name price image farmer')
+        .sort({ createdAt: -1 });
+    }
 
     res.status(200).json({
       success: true,

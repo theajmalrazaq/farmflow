@@ -28,7 +28,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (token) {
         try {
           const res = await apiClient.get('/auth/me');
-          setUser(res.data);
+          setUser(res.data.user);
         } catch (err) {
           console.error('Failed to fetch user', err);
           logout();

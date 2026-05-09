@@ -15,6 +15,7 @@ router.get('/', auth, getCart);
 router.post('/add', auth, addToCart);
 router.post('/remove', auth, removeFromCart);
 router.put('/update', auth, updateQuantity);
+router.post('/clear', auth, clearCart);
 router.delete('/clear', auth, clearCart);
 router.get('/count', auth, getCartCount);
 

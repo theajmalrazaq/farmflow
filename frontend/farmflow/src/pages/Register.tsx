@@ -2,20 +2,33 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import apiClient from '../api/client';
-import { UserPlus, Mail, Lock, User, Briefcase, Loader2 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { UserPlus, Mail, Lock, User, Briefcase, Loader2, MapPin, Image as ImageIcon, ArrowLeft, ArrowRight } from 'lucide-react';
 
 const Register = () => {
+  const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
-    role: 'customer'
+    role: 'customer',
+    farmName: '',
+    address: '',
+    coverImage: '',
+    logo: ''
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  const handleNext = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (formData.role === 'farmer') {
+      setStep(2);
+    } else {
+      handleSubmit(e);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,6 +40,8 @@ const Register = () => {
       navigate('/');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Registration failed.');
+      // If error happens in step 2, we stay there. If it's a basic field error, maybe we should go back? 
+      // Usually validation errors for email/pass happen in step 1.
     } finally {
       setLoading(false);
     }
@@ -34,97 +49,184 @@ const Register = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-[radial-gradient(circle_at_top_right,var(--color-primary-glow),transparent),radial-gradient(circle_at_bottom_left,var(--color-secondary-glow),transparent),#050505]">
-      <motion.div 
-        className="w-full max-w-[480px] p-10 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl flex flex-col gap-8"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        <div className="text-center">
-          <span className="text-2xl font-extrabold tracking-tight">Farm<span className="text-primary">Flow</span></span>
-          <h1 className="text-3xl font-bold mt-4 mb-2">Create Account</h1>
-          <p className="text-zinc-400 text-sm">Join the future of agricultural management</p>
+      <div className="w-full max-w-[480px] p-10 rounded-[32px] bg-bg-primary/5 backdrop-blur-xl border border-white/10 flex flex-col gap-8">
+        <div className="flex flex-col items-center text-center">
+          <Link to="/" className="flex items-center">
+            <h1 className="text-2xl font-bold font-syne ">Farm<span className='text-primary'>Flow</span></h1>
+          </Link>
+          <h1 className="text-3xl font-bold mt-4 mb-2">
+            {step === 1 ? 'Create Account' : 'Farm Details'}
+          </h1>
+          <p className="text-white/40 text-sm">
+            {step === 1 ? 'Join the future of agricultural management' : 'Tell us more about your organic farm'}
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form onSubmit={step === 1 ? handleNext : handleSubmit} className="flex flex-col gap-4">
           {error && (
-            <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-3.5 rounded-xl text-sm font-medium">
+            <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-3.5 rounded-full text-sm font-medium">
               {error}
             </div>
           )}
-          
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-zinc-400">Full Name</label>
-            <div className="relative flex items-center group">
-              <User size={18} className="absolute left-4 text-zinc-500 group-focus-within:text-primary transition-colors" />
-              <input 
-                type="text" 
-                placeholder="John Doe" 
-                className="w-full bg-bg-surface border border-border-subtle rounded-xl py-3 pl-12 pr-4 focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all"
-                value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
-                required
-              />
-            </div>
-          </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-zinc-400">Email Address</label>
-            <div className="relative flex items-center group">
-              <Mail size={18} className="absolute left-4 text-zinc-500 group-focus-within:text-primary transition-colors" />
-              <input 
-                type="email" 
-                placeholder="name@example.com" 
-                className="w-full bg-bg-surface border border-border-subtle rounded-xl py-3 pl-12 pr-4 focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all"
-                value={formData.email}
-                onChange={(e) => setFormData({...formData, email: e.target.value})}
-                required
-              />
-            </div>
-          </div>
+          {step === 1 ? (
+            <>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-white/40">Full Name</label>
+                <div className="relative flex items-center group">
+                  <User size={18} className="absolute left-4 text-white/40 group-focus-within:text-primary transition-colors" />
+                  <input 
+                    type="text" 
+                    placeholder="John Doe" 
+                    className="w-full bg-bg-primary border border-white/10 rounded-full py-3 pl-12 pr-4 focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all"
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    required
+                  />
+                </div>
+              </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-zinc-400">Password</label>
-            <div className="relative flex items-center group">
-              <Lock size={18} className="absolute left-4 text-zinc-500 group-focus-within:text-primary transition-colors" />
-              <input 
-                type="password" 
-                placeholder="••••••••" 
-                className="w-full bg-bg-surface border border-border-subtle rounded-xl py-3 pl-12 pr-4 focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all"
-                value={formData.password}
-                onChange={(e) => setFormData({...formData, password: e.target.value})}
-                required
-              />
-            </div>
-          </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-white/40">Email Address</label>
+                <div className="relative flex items-center group">
+                  <Mail size={18} className="absolute left-4 text-white/40 group-focus-within:text-primary transition-colors" />
+                  <input 
+                    type="email" 
+                    placeholder="name@example.com" 
+                    className="w-full bg-bg-primary border border-white/10 rounded-full py-3 pl-12 pr-4 focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all"
+                    value={formData.email}
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    required
+                  />
+                </div>
+              </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-zinc-400">Account Type</label>
-            <div className="relative flex items-center group">
-              <Briefcase size={18} className="absolute left-4 text-zinc-500 group-focus-within:text-primary transition-colors" />
-              <select 
-                className="w-full bg-bg-surface border border-border-subtle rounded-xl py-3 pl-12 pr-4 focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all appearance-none cursor-pointer"
-                value={formData.role}
-                onChange={(e) => setFormData({...formData, role: e.target.value})}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-white/40">Password</label>
+                <div className="relative flex items-center group">
+                  <Lock size={18} className="absolute left-4 text-white/40 group-focus-within:text-primary transition-colors" />
+                  <input 
+                    type="password" 
+                    placeholder="••••••••" 
+                    className="w-full bg-bg-primary border border-white/10 rounded-full py-3 pl-12 pr-4 focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all"
+                    value={formData.password}
+                    onChange={(e) => setFormData({...formData, password: e.target.value})}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-white/40">Account Type</label>
+                <div className="relative flex items-center group">
+                  <Briefcase size={18} className="absolute left-4 text-white/40 group-focus-within:text-primary transition-colors" />
+                  <select 
+                    className="w-full bg-bg-primary border border-white/10 rounded-full py-3 pl-12 pr-4 focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all appearance-none cursor-pointer font-syne"
+                    value={formData.role}
+                    onChange={(e) => setFormData({...formData, role: e.target.value})}
+                  >
+                    <option value="customer">Customer (Buyer)</option>
+                    <option value="farmer">Farmer (Seller/Manager)</option>
+                  </select>
+                </div>
+              </div>
+
+              <button 
+                type="submit" 
+                className="w-full h-12 mt-4 bg-primary text-black font-bold rounded-full flex items-center justify-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={loading}
               >
-                <option value="customer">Customer (Buyer)</option>
-                <option value="farmer">Farmer (Seller/Manager)</option>
-              </select>
-            </div>
-          </div>
+                {formData.role === 'farmer' ? (
+                  <>Next Step <ArrowRight size={20} /></>
+                ) : (
+                  loading ? <Loader2 className="animate-spin" size={20} /> : <><UserPlus size={20} /> Create Account</>
+                )}
+              </button>
+            </>
+          ) : (
+            <>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-white/40">Farm Name</label>
+                <div className="relative flex items-center group">
+                  <Briefcase size={18} className="absolute left-4 text-white/40 group-focus-within:text-primary transition-colors" />
+                  <input 
+                    type="text" 
+                    placeholder="Green Valley Farms" 
+                    className="w-full bg-bg-primary border border-white/10 rounded-full py-3 pl-12 pr-4 focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all"
+                    value={formData.farmName}
+                    onChange={(e) => setFormData({...formData, farmName: e.target.value})}
+                    required
+                  />
+                </div>
+              </div>
 
-          <button 
-            type="submit" 
-            className="w-full h-12 mt-4 bg-primary text-black font-bold rounded-xl flex items-center justify-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={loading}
-          >
-            {loading ? <Loader2 className="animate-spin" size={20} /> : <><UserPlus size={20} /> Get Started</>}
-          </button>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-white/40">Farm Address</label>
+                <div className="relative flex items-center group">
+                  <MapPin size={18} className="absolute left-4 text-white/40 group-focus-within:text-primary transition-colors" />
+                  <input 
+                    type="text" 
+                    placeholder="Chakwal, Punjab, Pakistan" 
+                    className="w-full bg-bg-primary border border-white/10 rounded-full py-3 pl-12 pr-4 focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all"
+                    value={formData.address}
+                    onChange={(e) => setFormData({...formData, address: e.target.value})}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-white/40">Logo URL</label>
+                <div className="relative flex items-center group">
+                  <User size={18} className="absolute left-4 text-white/40 group-focus-within:text-primary transition-colors" />
+                  <input 
+                    type="url" 
+                    placeholder="https://images.unsplash.com/logo..." 
+                    className="w-full bg-bg-primary border border-white/10 rounded-full py-3 pl-12 pr-4 focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all"
+                    value={formData.logo}
+                    onChange={(e) => setFormData({...formData, logo: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-white/40">Cover Image URL</label>
+                <div className="relative flex items-center group">
+                  <ImageIcon size={18} className="absolute left-4 text-white/40 group-focus-within:text-primary transition-colors" />
+                  <input 
+                    type="url" 
+                    placeholder="https://images.unsplash.com/cover..." 
+                    className="w-full bg-bg-primary border border-white/10 rounded-full py-3 pl-12 pr-4 focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all"
+                    value={formData.coverImage}
+                    onChange={(e) => setFormData({...formData, coverImage: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-4 mt-4">
+                <button 
+                  type="button"
+                  onClick={() => setStep(1)}
+                  className="flex-1 h-12 bg-white/10 text-white font-bold rounded-full flex items-center justify-center gap-2 hover:bg-zinc-200 transition-all"
+                >
+                  <ArrowLeft size={20} /> Back
+                </button>
+                <button 
+                  type="submit" 
+                  className="flex-[2] h-12 bg-primary text-black font-bold rounded-full flex items-center justify-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={loading}
+                >
+                  {loading ? <Loader2 className="animate-spin" size={20} /> : <><UserPlus size={20} /> Complete Signup</>}
+                </button>
+              </div>
+            </>
+          )}
         </form>
 
-        <p className="text-center text-sm text-zinc-500">
+        <p className="text-center text-sm text-white/40">
           Already have an account? <Link to="/login" className="text-primary font-semibold hover:underline">Sign In</Link>
         </p>
-      </motion.div>
+      </div>
     </div>
   );
 };

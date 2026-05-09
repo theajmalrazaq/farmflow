@@ -9,6 +9,10 @@ const inventoryRoutes = require('./routes/inventoryRoutes');
 const expenseRoutes = require('./routes/expenseRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const cartRoutes = require('./routes/cartRoutes');
+const cattleRoutes = require('./routes/cattleRoutes');
+const employeeRoutes = require('./routes/employeeRoutes');
+const farmRoutes = require('./routes/farmRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 
 const morgan = require('morgan');
 const cors = require('cors');
@@ -16,7 +20,8 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(cors());
 app.use(morgan('dev'));
 
@@ -33,6 +38,10 @@ app.use('/api/inventory', inventoryRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/cart', cartRoutes);
+app.use('/api/cattle', cattleRoutes);
+app.use('/api/employees', employeeRoutes);
+app.use('/api/farms', farmRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI)

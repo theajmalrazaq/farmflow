@@ -1,8 +1,11 @@
+const mongoose = require('mongoose');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const User = require('../models/User');
 const Expense = require('../models/Expense');
 const Crop = require('../models/Crop');
+const Cattle = require('../models/Cattle');
+const Employee = require('../models/Employee');
 
 // Dashboard overview
 exports.getDashboardStats = async (req, res) => {
@@ -66,6 +69,116 @@ exports.getDashboardStats = async (req, res) => {
         topProducts,
         ordersByStatus,
         recentOrders,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Farmer dashboard stats
+exports.getFarmerDashboardStats = async (req, res) => {
+  try {
+    const farmerId = req.user.id;
+
+    // Total products for this farmer
+    const totalProducts = await Product.countDocuments({ farmer: farmerId });
+
+    // Total crops for this farmer
+    const totalCrops = await Crop.countDocuments({ farmer: farmerId });
+
+    // Total cattle for this farmer
+    const totalCattle = await Cattle.countDocuments({ farmer: farmerId });
+
+    // Total employees for this farmer
+    const totalEmployees = await Employee.countDocuments({ farmer: farmerId });
+
+    // Get total revenue and daily sales history
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const salesAnalytics = await Order.aggregate([
+      { $unwind: '$items' },
+      {
+        $lookup: {
+          from: 'products',
+          localField: 'items.product',
+          foreignField: '_id',
+          as: 'productInfo',
+        },
+      },
+      { $unwind: '$productInfo' },
+      { $match: { 'productInfo.farmer': new mongoose.Types.ObjectId(farmerId) } },
+      {
+        $facet: {
+          grandTotals: [
+            {
+              $group: {
+                _id: null,
+                totalRevenue: { $sum: { $multiply: ['$items.price', '$items.quantity'] } },
+                totalSales: { $sum: '$items.quantity' },
+              },
+            },
+          ],
+          dailyHistory: [
+            { $match: { createdAt: { $gte: sevenDaysAgo } } },
+            {
+              $group: {
+                _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+                revenue: { $sum: { $multiply: ['$items.price', '$items.quantity'] } },
+              },
+            },
+            { $sort: { _id: 1 } },
+          ],
+        },
+      },
+    ]);
+
+    const statsResult = salesAnalytics[0] || { grandTotals: [], dailyHistory: [] };
+    const grandTotals = statsResult.grandTotals[0] || { totalRevenue: 0, totalSales: 0 };
+    const salesHistory = statsResult.dailyHistory || [];
+
+    // Total expenses for this farmer (using find + reduce for maximum reliability)
+    const allExpenses = await Expense.find({ farmer: farmerId });
+    const totalExpenses = allExpenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
+
+    // Real Recent activities (based on orders)
+    const recentOrders = await Order.find({
+      'items.product': { $in: await Product.find({ farmer: farmerId }).distinct('_id') }
+    })
+    .sort({ createdAt: -1 })
+    .limit(5)
+    .populate('user', 'name');
+
+    const recentActivities = recentOrders.map(order => ({
+      id: order._id,
+      type: 'order',
+      text: `New order from ${order.user?.name || 'Customer'}`,
+      time: new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    }));
+
+    // If no real activities, add a welcome message
+    if (recentActivities.length === 0) {
+      recentActivities.push({
+        id: 'welcome',
+        type: 'info',
+        text: 'Welcome to FarmFlow! Start by adding your first product.',
+        time: 'Just now'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      stats: {
+        totalProducts,
+        totalCrops,
+        totalCattle,
+        totalEmployees,
+        totalRevenue: grandTotals.totalRevenue || 0,
+        totalSales: grandTotals.totalSales || 0,
+        totalExpenses: totalExpenses || 0,
+        salesHistory,
+        recentActivities,
       },
     });
   } catch (error) {

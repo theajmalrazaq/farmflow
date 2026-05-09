@@ -5,7 +5,7 @@ const Product = require('../models/Product');
 exports.getCart = async (req, res) => {
   try {
     let cart = await Cart.findOne({ user: req.user.id })
-      .populate('items.product', 'name price image category farmer');
+            .populate('items.product', 'name price category farmer');
 
     if (!cart) {
       cart = await Cart.create({ user: req.user.id });
@@ -68,7 +68,7 @@ exports.addToCart = async (req, res) => {
     cart.updatedAt = Date.now();
 
     await cart.save();
-    await cart.populate('items.product', 'name price image category farmer');
+    await cart      .populate('items.product', 'name price category farmer');
 
     res.status(200).json({
       success: true,
@@ -104,7 +104,7 @@ exports.removeFromCart = async (req, res) => {
     cart.updatedAt = Date.now();
 
     await cart.save();
-    await cart.populate('items.product', 'name price image category farmer');
+    await cart      .populate('items.product', 'name price category farmer');
 
     res.status(200).json({
       success: true,
@@ -120,44 +120,45 @@ exports.removeFromCart = async (req, res) => {
 exports.updateQuantity = async (req, res) => {
   try {
     const { productId, quantity } = req.body;
+    console.log('[updateQuantity] body:', req.body);
 
-    if (!productId || !quantity || quantity < 1) {
-      return res.status(400).json({ message: 'Please provide productId and valid quantity' });
+    if (!productId) {
+      return res.status(400).json({ message: 'productId is required' });
     }
 
-    // Check if product exists and has stock
+    const qty = parseInt(quantity, 10);
+    if (isNaN(qty) || qty < 1) {
+      return res.status(400).json({ message: 'quantity must be a number >= 1' });
+    }
+
+    // Find cart (unpopulated so product is raw ObjectId string)
+    const cart = await Cart.findOne({ user: req.user.id });
+    if (!cart) {
+      return res.status(404).json({ message: 'Cart not found' });
+    }
+
+    console.log('[updateQuantity] cart items:', cart.items.map(i => i.product.toString()));
+
+    const cartItem = cart.items.find(item => item.product.toString() === productId.toString());
+    if (!cartItem) {
+      return res.status(404).json({ message: `Item with product id ${productId} not found in cart` });
+    }
+
+    // Check product exists
     const product = await Product.findById(productId);
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
 
-    if (product.quantity < quantity) {
-      return res.status(400).json({ message: `Not enough stock. Available: ${product.quantity}` });
-    }
+    cartItem.quantity = qty;
+    cartItem.price = product.price * qty;
 
-    const cart = await Cart.findOne({ user: req.user.id });
-
-    if (!cart) {
-      return res.status(404).json({ message: 'Cart not found' });
-    }
-
-    // Find and update item
-    const cartItem = cart.items.find((item) => item.product.toString() === productId);
-
-    if (!cartItem) {
-      return res.status(404).json({ message: 'Item not found in cart' });
-    }
-
-    cartItem.quantity = quantity;
-    cartItem.price = product.price * quantity;
-
-    // Update totals
     cart.totalItems = cart.items.reduce((sum, item) => sum + item.quantity, 0);
     cart.totalPrice = cart.items.reduce((sum, item) => sum + item.price, 0);
     cart.updatedAt = Date.now();
 
     await cart.save();
-    await cart.populate('items.product', 'name price image category farmer');
+    await cart      .populate('items.product', 'name price category farmer');
 
     res.status(200).json({
       success: true,
@@ -165,6 +166,7 @@ exports.updateQuantity = async (req, res) => {
       cart,
     });
   } catch (error) {
+    console.error('[updateQuantity] error:', error.message);
     res.status(500).json({ message: error.message });
   }
 };

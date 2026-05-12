@@ -70,9 +70,6 @@ const Expenses = () => {
           <p className="text-white/40 mt-1 text-sm font-medium">Monitor your spending and manage farm finances.</p>
         </div>
         <div className="flex gap-3">
-          <Button variant="secondary" leftIcon={<Download size={20} />}>
-            Export
-          </Button>
           {(user?.role === 'farmer' || (user?.role === 'employee' && user?.permissions?.expenses)) && (
             <Button 
               onClick={() => setIsModalOpen(true)}

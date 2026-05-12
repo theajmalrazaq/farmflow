@@ -157,37 +157,27 @@ const Dashboard = () => {
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 glass-card p-8">
+        <div className="lg:col-span-3 glass-card p-8">
           <div className="flex justify-between items-center mb-8">
-            <h3 className="text-lg font-bold text-white ">Sales Analytics</h3>
-            <Button variant="secondary" size="sm">Export Data</Button>
+            <h3 className="text-lg font-bold text-white ">Quick Stats Summary</h3>
           </div>
-          <div className="h-72 flex items-end justify-around gap-4 px-4 pb-4">
-            {data?.salesHistory?.length > 0 ? (
-              data.salesHistory.map((day: any, i: number) => {
-                const maxRevenue = Math.max(...data.salesHistory.map((d: any) => d.revenue), 1);
-                const height = (day.revenue / maxRevenue) * 90 + 10; 
-                return (
-                  <div key={i} className="flex flex-col items-center gap-2 flex-1 max-w-[40px]">
-                    <div 
-                      className="w-full bg-primary rounded-t-lg transition-all duration-1000" 
-                      style={{ height: `${height}%`, opacity: 0.2 + (day.revenue > 0 ? 0.8 : 0) }}
-                    />
-                    <span className="text-[10px] text-white/40 font-bold whitespace-nowrap">
-                      {new Date(day._id).toLocaleDateString([], { weekday: 'short' })}
-                    </span>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-white/30 font-medium">
-                No sales data yet
-              </div>
-            )}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+                <p className="text-white/40 text-xs font-bold uppercase tracking-wider mb-1">Lifetime Revenue</p>
+                <h4 className="text-2xl font-black text-white">Rs. {data?.totalRevenue?.toLocaleString() || '0'}</h4>
+            </div>
+            <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+                <p className="text-white/40 text-xs font-bold uppercase tracking-wider mb-1">Total Sales</p>
+                <h4 className="text-2xl font-black text-white">{data?.totalSales || '0'} Items</h4>
+            </div>
+            <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+                <p className="text-white/40 text-xs font-bold uppercase tracking-wider mb-1">Active Products</p>
+                <h4 className="text-2xl font-black text-white">{data?.totalProducts || '0'} Units</h4>
+            </div>
           </div>
         </div>
 
-        <div className="glass-card p-8 flex flex-col h-[500px]">
+        <div className="lg:col-span-3 glass-card p-8 flex flex-col h-[500px]">
           <div className="flex justify-between items-center mb-8">
             <h3 className="text-lg font-bold text-white ">Alerts</h3>
             {notifications.some(n => !n.read) && (

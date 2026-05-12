@@ -99,10 +99,7 @@ exports.getFarmerDashboardStats = async (req, res) => {
     const totalEmployees = await Employee.countDocuments({ farmer: farmerId });
 
     
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-    const salesAnalytics = await Order.aggregate([
+    const salesData = await Order.aggregate([
       { $match: { status: 'delivered' } },
       { $unwind: '$items' },
       {
@@ -116,47 +113,15 @@ exports.getFarmerDashboardStats = async (req, res) => {
       { $unwind: '$productInfo' },
       { $match: { 'productInfo.farmer': new mongoose.Types.ObjectId(farmerId) } },
       {
-        $facet: {
-          grandTotals: [
-            {
-              $group: {
-                _id: null,
-                totalRevenue: { $sum: { $multiply: ['$items.price', '$items.quantity'] } },
-                totalSales: { $sum: '$items.quantity' },
-              },
-            },
-          ],
-          dailyHistory: [
-            { $match: { createdAt: { $gte: sevenDaysAgo } } },
-            {
-              $group: {
-                _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
-                revenue: { $sum: { $multiply: ['$items.price', '$items.quantity'] } },
-              },
-            },
-            { $sort: { _id: 1 } },
-          ],
+        $group: {
+          _id: null,
+          totalRevenue: { $sum: { $multiply: ['$items.price', '$items.quantity'] } },
+          totalSales: { $sum: '$items.quantity' },
         },
       },
     ]);
 
-    const statsResult = salesAnalytics[0] || { grandTotals: [], dailyHistory: [] };
-    const grandTotals = statsResult.grandTotals?.[0] || { totalRevenue: 0, totalSales: 0 };
-    const rawHistory = statsResult.dailyHistory || [];
-
-    
-    const salesHistory = [];
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0];
-      
-      const dayData = rawHistory.find(d => d._id === dateStr);
-      salesHistory.push({
-        _id: dateStr,
-        revenue: dayData ? dayData.revenue : 0
-      });
-    }
+    const grandTotals = salesData[0] || { totalRevenue: 0, totalSales: 0 };
 
     
     const allExpenses = await Expense.find({ farmer: farmerId });
@@ -200,7 +165,6 @@ exports.getFarmerDashboardStats = async (req, res) => {
         totalRevenue: grandTotals.totalRevenue || 0,
         totalSales: grandTotals.totalSales || 0,
         totalExpenses: totalExpenses || 0,
-        salesHistory,
         recentActivities,
       },
     });
@@ -210,76 +174,6 @@ exports.getFarmerDashboardStats = async (req, res) => {
 };
 
 
-exports.getSalesAnalytics = async (req, res) => {
-  try {
-    const { startDate, endDate } = req.query;
-
-    let dateFilter = {};
-    if (startDate) dateFilter.$gte = new Date(startDate);
-    if (endDate) dateFilter.$lte = new Date(endDate);
-
-    const filter = dateFilter ? { createdAt: dateFilter } : {};
-
-    
-    const dailyRevenue = await Order.aggregate([
-      { $match: { createdAt: dateFilter } },
-      {
-        $group: {
-          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
-          revenue: { $sum: '$totalPrice' },
-          orders: { $sum: 1 },
-        },
-      },
-      { $sort: { _id: 1 } },
-    ]);
-
-    
-    const revenueByStatus = await Order.aggregate([
-      { $match: { createdAt: dateFilter } },
-      {
-        $group: {
-          _id: '$paymentStatus',
-          total: { $sum: '$totalPrice' },
-          count: { $sum: 1 },
-        },
-      },
-    ]);
-
-    
-    const categorySales = await Order.aggregate([
-      { $match: { createdAt: dateFilter } },
-      { $unwind: '$items' },
-      {
-        $lookup: {
-          from: 'products',
-          localField: 'items.product',
-          foreignField: '_id',
-          as: 'product',
-        },
-      },
-      { $unwind: '$product' },
-      {
-        $group: {
-          _id: '$product.category',
-          totalSold: { $sum: '$items.quantity' },
-          revenue: { $sum: { $multiply: ['$items.price', '$items.quantity'] } },
-        },
-      },
-      { $sort: { revenue: -1 } },
-    ]);
-
-    res.status(200).json({
-      success: true,
-      analytics: {
-        dailyRevenue,
-        revenueByStatus,
-        categorySales,
-      },
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
 
 
 exports.getAllCustomers = async (req, res) => {

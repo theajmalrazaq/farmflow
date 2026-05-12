@@ -2,11 +2,6 @@ const express = require('express');
 const router = express.Router();
 const {
   getDashboardStats,
-  getSalesAnalytics,
-  getAllCustomers,
-  getAllFarmers,
-  getInventoryAnalytics,
-  getExpenseAnalytics,
   updateOrderStatus,
   getFarmerDashboardStats,
 } = require('../controllers/adminController');

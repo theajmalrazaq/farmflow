@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import apiClient from '../api/client';
+import SuperAdmin from '../admin/SuperAdmin';
+import { useAuth } from '../../context/AuthContext';
+import apiClient from '../../api/client';
 import { 
   TrendingUp, 
   Users, 
@@ -13,6 +14,7 @@ import {
   Beef,
   Receipt
 } from 'lucide-react';
+import Button from '../../components/ui/Button';
 
 
 const StatCard = ({ title, value, icon, trend, trendValue }: any) => (
@@ -50,7 +52,7 @@ const Dashboard = () => {
         const res = await apiClient.get(endpoint);
         setData(isFarmer ? res.data.stats : res.data);
         
-        // Fetch notifications
+        
         const notifRes = await apiClient.get('/notifications');
         setNotifications(notifRes.data.notifications || []);
       } catch (err) {
@@ -86,25 +88,25 @@ const Dashboard = () => {
     </div>
   );
 
+  if (user?.role === 'admin') {
+    return <SuperAdmin />;
+  }
+
   return (
     <div className="flex flex-col gap-8">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div>
           <h1 className="text-xl font-bold text-white ">Welcome, {user?.name} 👋</h1>
-          <p className="text-white/40 mt-1 text-sm font-medium">Here's what's happening with your farm today.</p>
+          <p className="text-white/40 mt-1 text-sm font-medium">
+            Here's what's happening with your farm today.
+          </p>
         </div>
         <div className="flex gap-4">
-          <Link 
-            to="/admin/products" 
-            className="bg-primary text-black px-6 py-3 rounded-[32px] font-bold text-sm hover:brightness-110 active:scale-[0.98] transition-all flex items-center gap-2"
-          >
-            <ShoppingBag size={18} /> Add Product
+          <Link to="/admin/products">
+            <Button size="md" leftIcon={<ShoppingBag size={18} />}>Add Product</Button>
           </Link>
-          <Link 
-            to="/crops" 
-            className="bg-bg-primary border border-white/10 text-white px-6 py-3 rounded-[32px] font-bold text-sm hover:bg-white/5 active:scale-[0.98] transition-all flex items-center gap-2"
-          >
-            <Sprout size={18} /> Manage Crops
+          <Link to="/crops">
+            <Button variant="secondary" size="md" leftIcon={<Sprout size={18} />}>Manage Crops</Button>
           </Link>
         </div>
       </header>
@@ -155,48 +157,38 @@ const Dashboard = () => {
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 bg-bg-primary/50 backdrop-blur-xl border border-white/10 rounded-[32px] p-8 glass">
+        <div className="lg:col-span-3 glass-card p-8">
           <div className="flex justify-between items-center mb-8">
-            <h3 className="text-lg font-bold text-white ">Sales Analytics</h3>
-            <button className="bg-white/5 border border-white/10 text-white/80 text-[11px] font-bold px-4 py-2 rounded-xl hover:bg-white/10 transition-all uppercase tracking-widest">
-              Export Data
-            </button>
+            <h3 className="text-lg font-bold text-white ">Quick Stats Summary</h3>
           </div>
-          <div className="h-72 flex items-end justify-around gap-4 px-4 pb-4">
-            {data?.salesHistory?.length > 0 ? (
-              data.salesHistory.map((day: any, i: number) => {
-                const maxRevenue = Math.max(...data.salesHistory.map((d: any) => d.revenue), 1);
-                const height = (day.revenue / maxRevenue) * 90 + 10; // min 10% height
-                return (
-                  <div key={i} className="flex flex-col items-center gap-2 flex-1 max-w-[40px]">
-                    <div 
-                      className="w-full bg-gradient-to-t from-primary to-primary/20 rounded-t-lg transition-all duration-1000" 
-                      style={{ height: `${height}%` }}
-                    />
-                    <span className="text-[10px] text-white/40 font-bold whitespace-nowrap">
-                      {new Date(day._id).toLocaleDateString([], { weekday: 'short' })}
-                    </span>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-white/30 font-medium">
-                No sales data yet
-              </div>
-            )}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+                <p className="text-white/40 text-xs font-bold uppercase tracking-wider mb-1">Lifetime Revenue</p>
+                <h4 className="text-2xl font-black text-white">Rs. {data?.totalRevenue?.toLocaleString() || '0'}</h4>
+            </div>
+            <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+                <p className="text-white/40 text-xs font-bold uppercase tracking-wider mb-1">Total Sales</p>
+                <h4 className="text-2xl font-black text-white">{data?.totalSales || '0'} Items</h4>
+            </div>
+            <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+                <p className="text-white/40 text-xs font-bold uppercase tracking-wider mb-1">Active Products</p>
+                <h4 className="text-2xl font-black text-white">{data?.totalProducts || '0'} Units</h4>
+            </div>
           </div>
         </div>
 
-        <div className="bg-bg-primary/50 backdrop-blur-xl border border-white/10 rounded-[32px] p-8 glass flex flex-col h-[500px]">
+        <div className="lg:col-span-3 glass-card p-8 flex flex-col h-[500px]">
           <div className="flex justify-between items-center mb-8">
             <h3 className="text-lg font-bold text-white ">Alerts</h3>
             {notifications.some(n => !n.read) && (
-              <button 
+              <Button 
+                variant="ghost" 
+                size="sm" 
                 onClick={markAllAsRead}
-                className="text-primary text-xs font-bold hover:underline"
+                className="text-primary hover:bg-primary/10"
               >
                 Mark all as read
-              </button>
+              </Button>
             )}
           </div>
           <div className="flex flex-col gap-6 overflow-y-auto pr-2 custom-scrollbar">

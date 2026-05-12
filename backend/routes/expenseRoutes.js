@@ -8,9 +8,9 @@ const {
   deleteExpense,
   getExpenseSummary,
 } = require('../controllers/expenseController');
-const auth = require('../middleware/auth');
+const { auth } = require('../middleware/auth');
 
-// Protected routes (farmer only)
+
 router.post('/', auth, createExpense);
 router.get('/', auth, getMyExpenses);
 router.get('/summary', auth, getExpenseSummary);

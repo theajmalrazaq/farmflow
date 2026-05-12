@@ -21,7 +21,7 @@ const productSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ['vegetables', 'fruits', 'grains', 'dairy', 'eggs', 'honey', 'other'],
+    enum: ['vegetables', 'fruits', 'grains', 'dairy', 'eggs', 'honey', 'livestock', 'other'],
     default: 'other',
   },
   image: {

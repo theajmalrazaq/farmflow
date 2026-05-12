@@ -6,18 +6,20 @@ const {
   getOrderById,
   updateOrderStatus,
   cancelOrder,
+  deleteOrder,
   getAllOrders,
 } = require('../controllers/orderController');
-const auth = require('../middleware/auth');
+const { auth } = require('../middleware/auth');
 
-// Protected routes
+
 router.post('/', auth, createOrder);
 router.get('/my-orders', auth, getMyOrders);
 router.get('/:id', auth, getOrderById);
 router.put('/:id', auth, updateOrderStatus);
-router.delete('/:id', auth, cancelOrder);
+router.delete('/:id', auth, deleteOrder);
+router.post('/:id/cancel', auth, cancelOrder);
 
-// Admin routes
+
 router.get('/', auth, getAllOrders);
 
 module.exports = router;

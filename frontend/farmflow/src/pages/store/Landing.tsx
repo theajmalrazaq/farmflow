@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Leaf, ShieldCheck, Truck, Phone, CheckCircle2, Star, Plus, Minus, MapPin, Loader2 } from 'lucide-react';
-import apiClient from '../api/client';
+import apiClient from '../../api/client';
+import Button from '../../components/ui/Button';
 
 const Landing = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
@@ -12,7 +13,7 @@ const Landing = () => {
     const fetchFarms = async () => {
       try {
         const res = await apiClient.get('/farms');
-        // Take only first 4 for featured section
+        
         setFarms(res.data.farms?.slice(0, 4) || []);
       } catch (err) {
         console.error('Failed to fetch featured farms', err);
@@ -25,7 +26,7 @@ const Landing = () => {
 
   return (
     <div className="bg-transparent text-white min-h-screen font-sans">
-      {/* Hero Section */}
+      
       <section className="relative pt-48 pb-20 lg:pt-64 lg:pb-32 overflow-hidden bg-bg-dark">
         <div className="absolute inset-0 z-0">
           <img 
@@ -46,8 +47,8 @@ const Landing = () => {
               We bring 100% organic produce from certified farms all over Pakistan direct to your doorstep. Discover local farms and their freshest products.
             </p>
             <div className="flex flex-wrap justify-center items-center gap-4">
-              <Link to="/discover" className="bg-primary text-black font-bold px-10 py-4 rounded-[32px] flex items-center gap-2 hover:brightness-110 transition-all">
-                Discover Farms 
+              <Link to="/discover">
+                <Button size="lg">Discover Farms</Button>
               </Link>
             </div>
           </div>
@@ -98,7 +99,7 @@ const Landing = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-[700px]">
-            {/* Main Bento Item */}
+            
             <div className="md:col-span-8 relative rounded-[48px] overflow-hidden group">
               <img 
                 src="/imgone.jpg" 
@@ -154,8 +155,8 @@ const Landing = () => {
                 Discover the passionate people behind your food. Each farm is verified for quality and organic standards.
               </p>
             </div>
-            <Link to="/discover" className="bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold px-8 py-4 rounded-[32px] transition-all">
-              View All Farms
+            <Link to="/discover">
+              <Button variant="secondary" size="lg">View All Farms</Button>
             </Link>
           </div>
 
@@ -179,7 +180,7 @@ const Landing = () => {
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
                     <div className="absolute bottom-6 left-6 right-6">
-                      <div className="flex items-center gap-1.5 text-primary font-bold text-[10px] uppercase tracking-widest mb-2">
+                      <div className="flex items-center gap-1.5 text-primary font-bold text-[10px]  mb-2">
                         <MapPin size={10} />
                         {farm.address?.split(',').pop() || 'Pakistan'}
                       </div>
@@ -225,8 +226,8 @@ const Landing = () => {
               </div>
             </div>
             
-            <Link to="/shop" className="bg-primary text-black font-bold px-8 py-4 rounded-full inline-flex items-center gap-2 hover:brightness-110 transition-all">
-              Start Shopping
+            <Link to="/shop">
+              <Button size="lg">Start Shopping</Button>
             </Link>
           </div>
           
@@ -298,11 +299,10 @@ const Landing = () => {
                       ))}
                     </h3>
                   </div>
-                  <Link 
-                    to="/shop" 
-                    className="w-14 h-14 bg-primary rounded-full flex items-center justify-center text-white active:scale-90 transition-all"
-                  >
-                    <ArrowRight size={24} />
+                  <Link to="/shop">
+                    <Button size="icon" className="rounded-full">
+                      <ArrowRight size={24} />
+                    </Button>
                   </Link>
                 </div>
               </div>
@@ -332,7 +332,7 @@ const Landing = () => {
             </h2>
             <div>
               <p className="text-2xl font-black text-white">Amina Rehman</p>
-              <p className="text-primary font-bold uppercase tracking-widest text-sm mt-1">Health-Conscious Mother, Lahore</p>
+              <p className="text-primary font-bold  text-sm mt-1">Health-Conscious Mother, Lahore</p>
             </div>
           </div>
         </div>
@@ -396,20 +396,20 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* FAQ Banner */}
+      
       <section className="py-20 bg-transparent border-t border-white/5">
         <div className="max-w-[1400px] mx-auto px-8 flex flex-col md:flex-row items-center justify-between gap-8">
           <div>
             <h2 className="text-xl font-bold text-white  mb-2">Want to Know More About Our Farms?</h2>
             <p className="text-white/40">Our team can provide detailed reports on the farms we partner with.</p>
           </div>
-          <button className="bg-primary text-black font-bold px-8 py-4 rounded-full flex items-center gap-2 hover:bg-green-600 transition-all whitespace-nowrap">
-            <Phone size={20} /> Contact Us Now
-          </button>
+          <Button size="lg" leftIcon={<Phone size={20} />}>
+            Contact Us Now
+          </Button>
         </div>
       </section>
 
-      {/* Farmer Motivation Section */}
+      
       <section className="py-24 relative overflow-hidden rounded-[48px] m-6 md:m-12 bg-bg-card border border-white/5">
         <div className="absolute inset-0 z-0">
           <img 
@@ -433,17 +433,11 @@ const Landing = () => {
             </p>
             
             <div className="flex flex-wrap gap-4">
-              <Link 
-                to="/register" 
-                className="bg-primary text-black font-black px-10 py-5 rounded-[24px] hover:brightness-110 active:scale-95 transition-all flex items-center gap-3"
-              >
-                Start Selling Now <ArrowRight size={20} />
+              <Link to="/register">
+                <Button size="lg" rightIcon={<ArrowRight size={20} />}>Start Selling Now</Button>
               </Link>
-              <Link 
-                to="/about" 
-                className="bg-white/5 backdrop-blur-xl border border-white/10 text-white font-black px-10 py-5 rounded-[24px] hover:bg-white/10 transition-all active:scale-95"
-              >
-                Explore Benefits
+              <Link to="/about">
+                <Button variant="secondary" size="lg">Explore Benefits</Button>
               </Link>
             </div>
           </div>
@@ -451,25 +445,25 @@ const Landing = () => {
           <div className="grid grid-cols-2 gap-6 relative">
             <div className="bg-white/5 backdrop-blur-3xl border border-white/10 p-10 rounded-[48px] flex flex-col gap-2">
               <span className="text-primary font-black text-4xl">0%</span>
-              <p className="text-white/30 font-bold uppercase tracking-widest text-[10px]">Platform Fees</p>
+              <p className="text-white/30 font-bold  text-[10px]">Platform Fees</p>
             </div>
             <div className="bg-white/5 backdrop-blur-3xl border border-white/10 p-10 rounded-[48px] flex flex-col gap-2 translate-y-12">
               <span className="text-primary font-black text-4xl">5k+</span>
-              <p className="text-white/30 font-bold uppercase tracking-widest text-[10px]">Monthly Buyers</p>
+              <p className="text-white/30 font-bold  text-[10px]">Monthly Buyers</p>
             </div>
             <div className="bg-white/5 backdrop-blur-3xl border border-white/10 p-10 rounded-[48px] flex flex-col gap-2 mt-4">
               <span className="text-primary font-black text-4xl">Direct</span>
-              <p className="text-white/30 font-bold uppercase tracking-widest text-[10px]">Payment Settlement</p>
+              <p className="text-white/30 font-bold  text-[10px]">Payment Settlement</p>
             </div>
             <div className="bg-white/5 backdrop-blur-3xl border border-white/10 p-10 rounded-[48px] flex flex-col gap-2 translate-y-12 mt-4">
               <span className="text-primary font-black text-4xl">Free</span>
-              <p className="text-white/30 font-bold uppercase tracking-widest text-[10px]">Stock Management</p>
+              <p className="text-white/30 font-bold  text-[10px]">Stock Management</p>
             </div>
           </div>
         </div>
       </section>
       
-      {/* Footer CTA */}
+      
       <footer className="bg-bg-dark text-white pt-20 pb-10 border-t border-white/5">
         <div className="max-w-[1400px] mx-auto px-8 grid md:grid-cols-2 gap-12 items-center mb-16">
           <div>
@@ -478,9 +472,7 @@ const Landing = () => {
           </div>
           <div className="flex gap-2">
             <input type="email" placeholder="Email Address" className="w-full bg-bg-primary/10 border border-white/20 rounded-full px-6 py-4 focus:outline-none focus:border-primary text-white" />
-            <button className="bg-primary text-black font-bold px-8 py-4 rounded-full hover:brightness-110 transition-all whitespace-nowrap">
-              Subscribe
-            </button>
+            <Button>Subscribe</Button>
           </div>
         </div>
         <div className="max-w-[1400px] mx-auto px-8 flex flex-col md:flex-row justify-between items-center pt-8 border-t border-white/10 text-sm text-white/40">

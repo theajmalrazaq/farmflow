@@ -7,9 +7,9 @@ const {
   updateInventory,
   deleteInventory,
 } = require('../controllers/inventoryController');
-const auth = require('../middleware/auth');
+const { auth } = require('../middleware/auth');
 
-// Protected routes (farmer only)
+
 router.post('/', auth, createInventory);
 router.get('/', auth, getMyInventory);
 router.get('/:id', auth, getInventoryById);

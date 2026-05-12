@@ -1,41 +1,41 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 
-// Generate JWT Token
+
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET || 'your-secret-key', {
     expiresIn: '30d',
   });
 };
 
-// Register User
+
 exports.register = async (req, res) => {
   try {
     const { name, email, password, role, farmName, address, coverImage, logo } = req.body;
 
-    // Validation
+    
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'Please provide all required fields' });
     }
 
-    // Check if user exists
+    
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ message: 'Email already registered' });
     }
 
-    // Generate farm slug if farmer
+    
     let farmSlug = undefined;
     if (role === 'farmer' && farmName) {
       farmSlug = farmName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-      // Check if slug exists, append random string if it does
+      
       const existingSlug = await User.findOne({ farmSlug });
       if (existingSlug) {
         farmSlug += `-${Math.floor(Math.random() * 1000)}`;
       }
     }
 
-    // Create user
+    
     const user = await User.create({
       name,
       email,
@@ -48,7 +48,7 @@ exports.register = async (req, res) => {
       logo: role === 'farmer' ? logo : undefined,
     });
 
-    // Generate token
+    
     const token = generateToken(user._id);
 
     res.status(201).json({
@@ -60,6 +60,8 @@ exports.register = async (req, res) => {
         email: user.email,
         role: user.role,
         farmSlug: user.farmSlug,
+        permissions: user.permissions,
+        employer: user.employer,
       },
     });
   } catch (error) {
@@ -67,29 +69,29 @@ exports.register = async (req, res) => {
   }
 };
 
-// Login User
+
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validation
+    
     if (!email || !password) {
       return res.status(400).json({ message: 'Please provide email and password' });
     }
 
-    // Find user
+    
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    // Check password
+    
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    // Generate token
+    
     const token = generateToken(user._id);
 
     res.status(200).json({
@@ -101,6 +103,8 @@ exports.login = async (req, res) => {
         email: user.email,
         role: user.role,
         farmSlug: user.farmSlug,
+        permissions: user.permissions,
+        employer: user.employer,
       },
     });
   } catch (error) {
@@ -108,7 +112,7 @@ exports.login = async (req, res) => {
   }
 };
 
-// Get Current User
+
 exports.getCurrentUser = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
@@ -121,6 +125,12 @@ exports.getCurrentUser = async (req, res) => {
         role: user.role,
         farmName: user.farmName,
         farmSlug: user.farmSlug,
+        farmDescription: user.farmDescription,
+        address: user.address,
+        coverImage: user.coverImage,
+        logo: user.logo,
+        permissions: user.permissions,
+        employer: user.employer,
       },
     });
   } catch (error) {
@@ -128,7 +138,7 @@ exports.getCurrentUser = async (req, res) => {
   }
 };
 
-// Update User Profile
+
 exports.updateProfile = async (req, res) => {
   try {
     const { name, address, coverImage, farmName, farmDescription, logo } = req.body;
@@ -145,7 +155,7 @@ exports.updateProfile = async (req, res) => {
     if (farmDescription) user.farmDescription = farmDescription;
     if (logo) user.logo = logo;
 
-    // Regenerate slug if farm name changed
+    
     if (farmName && user.role === 'farmer') {
       user.farmSlug = farmName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
       const existingSlug = await User.findOne({ farmSlug: user.farmSlug, _id: { $ne: user._id } });
@@ -175,7 +185,7 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
-// Change Password
+
 exports.changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
@@ -189,13 +199,13 @@ exports.changePassword = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Check current password
+    
     const isMatch = await user.matchPassword(currentPassword);
     if (!isMatch) {
       return res.status(401).json({ message: 'Incorrect current password' });
     }
 
-    // Set new password (the model should handle hashing if it has a pre-save hook)
+    
     user.password = newPassword;
     await user.save();
 

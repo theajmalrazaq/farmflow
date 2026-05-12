@@ -18,8 +18,19 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['farmer', 'customer', 'admin'],
+    enum: ['farmer', 'customer', 'admin', 'employee'],
     default: 'customer',
+  },
+  employer: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  },
+  permissions: {
+    dashboard: { type: Boolean, default: false },
+    inventory: { type: Boolean, default: false },
+    crops: { type: Boolean, default: false },
+    cattle: { type: Boolean, default: false },
+    expenses: { type: Boolean, default: false },
   },
   farmName: {
     type: String,
@@ -47,7 +58,7 @@ const userSchema = new mongoose.Schema({
   },
 });
 
-// Hash password before saving
+
 userSchema.pre('save', async function() {
   if (!this.isModified('password')) return;
   
@@ -59,7 +70,7 @@ userSchema.pre('save', async function() {
   }
 });
 
-// Method to compare passwords
+
 userSchema.methods.matchPassword = async function(enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };

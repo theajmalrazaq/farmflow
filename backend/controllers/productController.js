@@ -1,16 +1,19 @@
 const Product = require('../models/Product');
 
-// Get all products
 exports.getAllProducts = async (req, res) => {
   try {
-    const { category, minPrice, maxPrice, search } = req.query;
-
-    // Build filter
+    const { category, minPrice, maxPrice, search, sort } = req.query;
     let filter = {};
     if (req.query.mine === 'true' && req.user) {
-      filter.farmer = req.user.id;
+      filter.farmer = req.farmerId;
+    } else if (req.query.all === 'true') {
+      if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Not authorized as an admin' });
+      }
+    } else {
+      filter.status = 'approved';
     }
-    if (category) filter.category = category;
+    if (category && category !== 'all') filter.category = category;
     if (minPrice || maxPrice) {
       filter.price = {};
       if (minPrice) filter.price.$gte = minPrice;
@@ -23,9 +26,14 @@ exports.getAllProducts = async (req, res) => {
       ];
     }
 
+    let sortOptions = { createdAt: -1 };
+    if (sort === 'price_asc') sortOptions = { price: 1 };
+    if (sort === 'price_desc') sortOptions = { price: -1 };
+    if (sort === 'newest') sortOptions = { createdAt: -1 };
+
     const products = await Product.find(filter)
       .populate('farmer', 'name farmName email farmSlug')
-      .sort({ createdAt: -1 });
+      .sort(sortOptions);
 
     res.status(200).json({
       success: true,
@@ -37,7 +45,7 @@ exports.getAllProducts = async (req, res) => {
   }
 };
 
-// Get single product
+
 exports.getProductById = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id)
@@ -57,7 +65,7 @@ exports.getProductById = async (req, res) => {
   }
 };
 
-// Create product (farmer only)
+
 exports.createProduct = async (req, res) => {
   try {
     const { name, description, price, quantity, category, image } = req.body;
@@ -73,7 +81,7 @@ exports.createProduct = async (req, res) => {
       quantity,
       category,
       image,
-      farmer: req.user.id,
+      farmer: req.farmerId,
     });
 
     res.status(201).json({
@@ -85,7 +93,7 @@ exports.createProduct = async (req, res) => {
   }
 };
 
-// Update product (farmer only)
+
 exports.updateProduct = async (req, res) => {
   try {
     let product = await Product.findById(req.params.id);
@@ -94,8 +102,8 @@ exports.updateProduct = async (req, res) => {
       return res.status(404).json({ message: 'Product not found' });
     }
 
-    // Check if user is the farmer who created the product
-    if (product.farmer.toString() !== req.user.id) {
+    
+    if (req.user.role !== 'admin' && product.farmer.toString() !== req.farmerId?.toString()) {
       return res.status(403).json({ message: 'Not authorized to update this product' });
     }
 
@@ -113,7 +121,7 @@ exports.updateProduct = async (req, res) => {
   }
 };
 
-// Delete product (farmer only)
+
 exports.deleteProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
@@ -122,8 +130,8 @@ exports.deleteProduct = async (req, res) => {
       return res.status(404).json({ message: 'Product not found' });
     }
 
-    // Check if user is the farmer who created the product
-    if (product.farmer.toString() !== req.user.id) {
+    
+    if (req.user.role !== 'admin' && product.farmer.toString() !== req.farmerId?.toString()) {
       return res.status(403).json({ message: 'Not authorized to delete this product' });
     }
 
@@ -138,7 +146,7 @@ exports.deleteProduct = async (req, res) => {
   }
 };
 
-// Add review to product
+
 exports.addReview = async (req, res) => {
   try {
     const { comment, rating } = req.body;
@@ -161,7 +169,7 @@ exports.addReview = async (req, res) => {
 
     product.reviews.push(review);
 
-    // Calculate average rating
+    
     const avgRating =
       product.reviews.reduce((acc, review) => acc + review.rating, 0) / product.reviews.length;
     product.rating = avgRating;
@@ -177,14 +185,14 @@ exports.addReview = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-// Approve product (SuperAdmin)
+
 exports.approveProduct = async (req, res) => {
   try {
     const product = await Product.findByIdAndUpdate(
       req.params.id,
       { status: 'approved' },
       { new: true }
-    );
+    ).populate('farmer', 'name farmName email farmSlug');
 
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
@@ -193,6 +201,29 @@ exports.approveProduct = async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'Product approved successfully',
+      product,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+exports.rejectProduct = async (req, res) => {
+  try {
+    const product = await Product.findByIdAndUpdate(
+      req.params.id,
+      { status: 'rejected' },
+      { new: true }
+    ).populate('farmer', 'name farmName email farmSlug');
+
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Product rejected',
       product,
     });
   } catch (error) {

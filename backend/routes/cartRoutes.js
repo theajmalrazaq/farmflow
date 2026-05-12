@@ -8,9 +8,9 @@ const {
   clearCart,
   getCartCount,
 } = require('../controllers/cartController');
-const auth = require('../middleware/auth');
+const { auth } = require('../middleware/auth');
 
-// Protected routes (customers)
+
 router.get('/', auth, getCart);
 router.post('/add', auth, addToCart);
 router.post('/remove', auth, removeFromCart);

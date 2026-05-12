@@ -1,12 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const { getFarmBySlug, getAllFarms, deleteFarm } = require('../controllers/farmController');
+const { auth, admin } = require('../middleware/auth');
 
-// Public routes for marketplace and farm profiles
+
 router.get('/', getAllFarms);
 router.get('/:slug', getFarmBySlug);
 
-// Admin routes
-router.delete('/:id', deleteFarm);
+
+router.delete('/:id', auth, admin, deleteFarm);
 
 module.exports = router;

@@ -2,7 +2,7 @@ const Order = require('../models/Order');
 const Product = require('../models/Product');
 const Notification = require('../models/Notification');
 
-// Create order
+
 exports.createOrder = async (req, res) => {
   try {
     const { items, deliveryAddress, notes } = req.body;
@@ -15,7 +15,7 @@ exports.createOrder = async (req, res) => {
       return res.status(400).json({ message: 'Please provide delivery address' });
     }
 
-    // Calculate total price and validate products
+    
     let totalPrice = 0;
     const orderItems = [];
     const farmerIds = new Set();
@@ -40,7 +40,7 @@ exports.createOrder = async (req, res) => {
 
       farmerIds.add(product.farmer.toString());
 
-      // Reduce product quantity
+      
       product.quantity -= item.quantity;
       await product.save();
     }
@@ -53,7 +53,7 @@ exports.createOrder = async (req, res) => {
       notes,
     });
 
-    // Create notifications for each farmer
+    
     for (const farmerId of farmerIds) {
       await Notification.create({
         recipient: farmerId,
@@ -76,7 +76,7 @@ exports.createOrder = async (req, res) => {
   }
 };
 
-// Get my orders (customer)
+
 exports.getMyOrders = async (req, res) => {
   try {
     const orders = await Order.find({ customer: req.user.id })
@@ -93,7 +93,7 @@ exports.getMyOrders = async (req, res) => {
   }
 };
 
-// Get single order
+
 exports.getOrderById = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id)
@@ -104,7 +104,7 @@ exports.getOrderById = async (req, res) => {
       return res.status(404).json({ message: 'Order not found' });
     }
 
-    // Check if user is the customer or admin
+    
     if (order.customer._id.toString() !== req.user.id && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Not authorized to view this order' });
     }
@@ -118,7 +118,7 @@ exports.getOrderById = async (req, res) => {
   }
 };
 
-// Update order status (admin/farmer)
+
 exports.updateOrderStatus = async (req, res) => {
   try {
     const { status, paymentStatus } = req.body;
@@ -148,7 +148,7 @@ exports.updateOrderStatus = async (req, res) => {
   }
 };
 
-// Cancel order
+
 exports.cancelOrder = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
@@ -157,7 +157,7 @@ exports.cancelOrder = async (req, res) => {
       return res.status(404).json({ message: 'Order not found' });
     }
 
-    // Check if user is the customer
+    
     if (order.customer.toString() !== req.user.id) {
       return res.status(403).json({ message: 'Not authorized to cancel this order' });
     }
@@ -166,7 +166,7 @@ exports.cancelOrder = async (req, res) => {
       return res.status(400).json({ message: 'Can only cancel pending orders' });
     }
 
-    // Restore product quantities
+    
     for (let item of order.items) {
       const product = await Product.findById(item.product);
       product.quantity += item.quantity;
@@ -187,23 +187,23 @@ exports.cancelOrder = async (req, res) => {
   }
 };
 
-// Get orders (farmers see only their own, admin sees all)
+
 exports.getAllOrders = async (req, res) => {
   try {
     let orders;
 
     if (req.user.role === 'admin') {
-      // Admin sees all orders
+      
       orders = await Order.find()
         .populate('customer', 'name email phone')
         .populate('items.product', 'name price image farmer')
         .sort({ createdAt: -1 });
     } else {
-      // Farmer: find products that belong to this farmer
+      
       const farmerProducts = await Product.find({ farmer: req.user.id }).select('_id');
       const farmerProductIds = farmerProducts.map(p => p._id);
 
-      // Find orders that contain at least one of this farmer's products
+      
       orders = await Order.find({
         'items.product': { $in: farmerProductIds }
       })
@@ -217,6 +217,31 @@ exports.getAllOrders = async (req, res) => {
       count: orders.length,
       orders,
     });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+exports.deleteOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ message: 'Order not found' });
+
+    
+    if (req.user.role !== 'admin') {
+      const farmerProducts = await Product.find({ farmer: req.user.id }).distinct('_id');
+      const hasFarmerProduct = order.items.some(item => 
+        farmerProducts.some(fpId => fpId.toString() === item.product.toString())
+      );
+      
+      if (!hasFarmerProduct) {
+        return res.status(403).json({ message: 'Not authorized to delete this order' });
+      }
+    }
+
+    await Order.findByIdAndDelete(req.params.id);
+    res.status(200).json({ success: true, message: 'Order deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

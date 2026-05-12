@@ -3,12 +3,12 @@ const Product = require('../models/Product');
 const Employee = require('../models/Employee');
 const Cattle = require('../models/Cattle');
 
-// Get public farm profile
+
 exports.getFarmBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
 
-    // Find farmer by slug
+    
     const farm = await User.findOne({ farmSlug: slug, role: 'farmer' })
       .select('-password -email -role -createdAt -__v');
 
@@ -16,10 +16,10 @@ exports.getFarmBySlug = async (req, res) => {
       return res.status(404).json({ message: 'Farm not found' });
     }
 
-    // Get public products for this farm
-    const products = await Product.find({ farmer: farm._id }).sort({ createdAt: -1 });
+    
+    const products = await Product.find({ farmer: farm._id, status: 'approved' }).sort({ createdAt: -1 });
 
-    // Get basic stats (optional, could be public)
+    
     const employeeCount = await Employee.countDocuments({ farmer: farm._id });
     const cattleCount = await Cattle.countDocuments({ farmer: farm._id });
 
@@ -39,11 +39,18 @@ exports.getFarmBySlug = async (req, res) => {
   }
 };
 
-// Get all farms (for global marketplace)
+
 exports.getAllFarms = async (req, res) => {
   try {
-    const farms = await User.find({ role: 'farmer', farmSlug: { $exists: true } })
-      .select('name farmName farmSlug farmDescription logo coverImage address');
+    const { region } = req.query;
+    let filter = { role: 'farmer', farmSlug: { $exists: true } };
+
+    if (region && region !== 'all') {
+      filter.address = { $regex: region, $options: 'i' };
+    }
+
+    const farms = await User.find(filter)
+      .select('name farmName farmSlug farmDescription address');
 
     res.status(200).json({
       success: true,
@@ -54,7 +61,7 @@ exports.getAllFarms = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-// Delete farm (SuperAdmin)
+
 exports.deleteFarm = async (req, res) => {
   try {
     const { id } = req.params;
@@ -64,7 +71,7 @@ exports.deleteFarm = async (req, res) => {
       return res.status(404).json({ message: 'Farm not found' });
     }
 
-    // Also delete products associated with this farm
+    
     await Product.deleteMany({ farmer: id });
 
     res.status(200).json({

@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import apiClient from '../api/client';
+import { useAuth } from '../../context/AuthContext';
+import apiClient from '../../api/client';
 import { UserPlus, Mail, Lock, User, Briefcase, MapPin, Image as ImageIcon, ArrowLeft, ArrowRight } from 'lucide-react';
-import Button from '../components/Button';
+import Button from '../../components/ui/Button';
 
 const Register = () => {
   const [step, setStep] = useState(1);

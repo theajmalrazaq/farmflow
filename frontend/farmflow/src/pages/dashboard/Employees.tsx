@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import apiClient from '../api/client';
+import apiClient from '../../api/client';
 import { Users, Plus, Trash2, Loader2, DollarSign, Phone, UserCircle, Mail, Lock, ShieldCheck, Pencil } from 'lucide-react';
-import Modal from '../components/Modal';
-import ConfirmModal from '../components/ConfirmModal';
-import { useToast } from '../context/ToastContext';
+import Modal from '../../components/modals/Modal';
+import ConfirmModal from '../../components/modals/ConfirmModal';
+import { useToast } from '../../context/ToastContext';
 
 
 const Employees = () => {

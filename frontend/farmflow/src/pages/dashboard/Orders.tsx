@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import apiClient from '../api/client';
+import apiClient from '../../api/client';
 import { 
   Package, 
   Search, 
@@ -17,10 +17,10 @@ import {
   ShoppingBag,
   Trash2
 } from 'lucide-react';
-import Dropdown from '../components/Dropdown';
-import ConfirmModal from '../components/ConfirmModal';
-import { useAuth } from '../context/AuthContext';
-import { useToast } from '../context/ToastContext';
+import Dropdown from '../../components/ui/Dropdown';
+import ConfirmModal from '../../components/modals/ConfirmModal';
+import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 
 const OrderRow = ({ order, onUpdateStatus }: any) => {
   const { user } = useAuth();
@@ -79,7 +79,7 @@ const OrderRow = ({ order, onUpdateStatus }: any) => {
           <div>
             <div className="flex items-center gap-3 mb-1">
               <h3 className="text-lg font-bold text-white ">Order #{order._id.slice(-6).toUpperCase()}</h3>
-              <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border flex items-center gap-1.5 ${getStatusStyle(order.status)}`}>
+              <span className={`px-2.5 py-1 rounded-full text-[10px] font-black  border flex items-center gap-1.5 ${getStatusStyle(order.status)}`}>
                 {getStatusIcon(order.status)}
                 {order.status}
               </span>
@@ -134,7 +134,7 @@ const OrderRow = ({ order, onUpdateStatus }: any) => {
         <div className="px-8 pb-8 pt-2 border-t border-white/10 grid md:grid-cols-2 gap-10">
           <div className="flex flex-col gap-6">
             <div>
-              <h4 className="text-xs font-black text-white/30 uppercase tracking-widest mb-4">Ordered Items</h4>
+              <h4 className="text-xs font-black text-white/30  mb-4">Ordered Items</h4>
               <div className="flex flex-col gap-3">
                 {order.items.map((item: any, i: number) => (
                   <div key={i} className="flex justify-between items-center bg-white/5/20 p-4 rounded-[32px]">
@@ -160,19 +160,19 @@ const OrderRow = ({ order, onUpdateStatus }: any) => {
 
           <div className="flex flex-col gap-6">
             <div>
-              <h4 className="text-xs font-black text-white/30 uppercase tracking-widest mb-4">Delivery & Contact</h4>
+              <h4 className="text-xs font-black text-white/30  mb-4">Delivery & Contact</h4>
               <div className="bg-white/5/20 p-6 rounded-3xl flex flex-col gap-4">
                 <div className="flex items-start gap-3">
                   <MapPin size={18} className="text-primary mt-0.5" />
                   <div>
-                    <p className="text-xs font-black text-white/30 uppercase tracking-widest mb-1">Shipping Address</p>
+                    <p className="text-xs font-black text-white/30  mb-1">Shipping Address</p>
                     <p className="text-white/80 font-medium leading-relaxed">{order.deliveryAddress}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <Phone size={18} className="text-primary" />
                   <div>
-                    <p className="text-xs font-black text-white/30 uppercase tracking-widest mb-1">Customer Phone</p>
+                    <p className="text-xs font-black text-white/30  mb-1">Customer Phone</p>
                     <p className="text-white/80 font-medium">{order.customer?.phone || 'Not Provided'}</p>
                   </div>
                 </div>

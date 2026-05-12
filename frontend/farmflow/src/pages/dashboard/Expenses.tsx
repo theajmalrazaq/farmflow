@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import apiClient from '../api/client';
+import apiClient from '../../api/client';
 import { Receipt, Plus, Download, TrendingDown, Loader2, DollarSign, Calendar, Tag, FileText, Search } from 'lucide-react';
-import Dropdown from '../components/Dropdown';
-import Modal from '../components/Modal';
-import Button from '../components/Button';
-import { useAuth } from '../context/AuthContext';
-import { useToast } from '../context/ToastContext';
+import Dropdown from '../../components/ui/Dropdown';
+import Modal from '../../components/modals/Modal';
+import Button from '../../components/ui/Button';
+import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
   
 const Expenses = () => {
   const { user } = useAuth();
@@ -131,11 +131,11 @@ const Expenses = () => {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-bg-primary/[0.02]">
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">Description</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">Category</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">Date</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">Amount</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">Status</th>
+                  <th className="px-6 py-4 text-[10px] font-black  text-white/40">Description</th>
+                  <th className="px-6 py-4 text-[10px] font-black  text-white/40">Category</th>
+                  <th className="px-6 py-4 text-[10px] font-black  text-white/40">Date</th>
+                  <th className="px-6 py-4 text-[10px] font-black  text-white/40">Amount</th>
+                  <th className="px-6 py-4 text-[10px] font-black  text-white/40">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border-subtle">
@@ -146,7 +146,7 @@ const Expenses = () => {
                     <td className="px-6 py-4 text-white/40 text-sm">{new Date(exp.date).toLocaleDateString()}</td>
                     <td className="px-6 py-4 text-red-500 font-bold">-Rs. {exp.amount?.toLocaleString()}</td>
                     <td className="px-6 py-4">
-                      <span className="px-2.5 py-1 rounded-full bg-white/10 text-white/40 text-[10px] font-black uppercase tracking-widest">Verified</span>
+                      <span className="px-2.5 py-1 rounded-full bg-white/10 text-white/40 text-[10px] font-black ">Verified</span>
                     </td>
                   </tr>
                 )) : (

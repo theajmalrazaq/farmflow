@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import SuperAdmin from './SuperAdmin';
-import { useAuth } from '../context/AuthContext';
-import apiClient from '../api/client';
+import SuperAdmin from '../admin/SuperAdmin';
+import { useAuth } from '../../context/AuthContext';
+import apiClient from '../../api/client';
 import { 
   TrendingUp, 
   Users, 
@@ -14,7 +14,7 @@ import {
   Beef,
   Receipt
 } from 'lucide-react';
-import Button from '../components/Button';
+import Button from '../../components/ui/Button';
 
 
 const StatCard = ({ title, value, icon, trend, trendValue }: any) => (

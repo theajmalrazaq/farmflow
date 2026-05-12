@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Shield, Trash2, CheckCircle2, Search, MapPin, Package, Loader2, XCircle, UserCircle} from 'lucide-react';
-import apiClient from '../api/client';
-import { useAuth } from '../context/AuthContext';
-import Button from '../components/Button';
-import ConfirmModal from '../components/ConfirmModal';
-import { useToast } from '../context/ToastContext';
+import apiClient from '../../api/client';
+import { useAuth } from '../../context/AuthContext';
+import Button from '../../components/ui/Button';
+import ConfirmModal from '../../components/modals/ConfirmModal';
+import { useToast } from '../../context/ToastContext';
 
 const SuperAdmin = () => {
   const { showToast } = useToast();
@@ -202,14 +202,14 @@ const SuperAdmin = () => {
                   
                   <div className="flex items-center gap-8 text-sm">
                     <div className="flex flex-col gap-1">
-                      <span className="text-white/20 uppercase tracking-widest text-[10px] font-black">Location</span>
+                      <span className="text-white/20  text-[10px] font-black">Location</span>
                       <div className="flex items-center gap-1.5 text-white/60">
                         <MapPin size={14} className="text-primary" />
                         {farm.address || 'Global'}
                       </div>
                     </div>
                     <div className="flex flex-col gap-1">
-                      <span className="text-white/20 uppercase tracking-widest text-[10px] font-black">Status</span>
+                      <span className="text-white/20  text-[10px] font-black">Status</span>
                       <span className="px-2.5 py-0.5 bg-green-500/10 text-green-500 rounded-full text-[10px] font-black uppercase border border-green-500/20">
                         Active
                       </span>
@@ -250,11 +250,11 @@ const SuperAdmin = () => {
 
                   <div className="flex items-center gap-8 text-sm">
                     <div className="flex flex-col gap-1">
-                      <span className="text-white/20 uppercase tracking-widest text-[10px] font-black">Price</span>
+                      <span className="text-white/20  text-[10px] font-black">Price</span>
                       <span className="text-white font-bold text-lg">Rs. {product.price}</span>
                     </div>
                     <div className="flex flex-col gap-1">
-                      <span className="text-white/20 uppercase tracking-widest text-[10px] font-black">Status</span>
+                      <span className="text-white/20  text-[10px] font-black">Status</span>
                       <span className={`w-fit px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border ${
                         product.status === 'approved' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 
                         product.status === 'rejected' ? 'bg-red-500/10 text-red-500 border-red-500/20' : 

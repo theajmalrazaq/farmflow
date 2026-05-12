@@ -1,6 +1,6 @@
 import React from 'react';
-import Modal from './Modal';
-import Button from './Button';
+import Modal from '../modals/Modal';
+import Button from '../ui/Button';
 import { AlertTriangle } from 'lucide-react';
 
 interface ConfirmModalProps {

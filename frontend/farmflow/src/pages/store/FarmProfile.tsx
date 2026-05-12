@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import apiClient from '../api/client';
+import apiClient from '../../api/client';
 import { Users, Info, Loader2, ArrowLeft, ShoppingBag, ShoppingCart } from 'lucide-react';
-import Button from '../components/Button';
-import { useAuth } from '../context/AuthContext';
-import { useToast } from '../context/ToastContext';
+import Button from '../../components/ui/Button';
+import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 
 const FarmProfile = () => {
   const { showToast } = useToast();
@@ -140,12 +140,12 @@ const FarmProfile = () => {
                       )}
 
                       
-                      <div className="absolute top-4 left-4 bg-primary/80 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-xl">
+                      <div className="absolute top-4 left-4 bg-primary/80 backdrop-blur-md text-white text-[10px] font-bold  px-3 py-1.5 rounded-xl">
                         {product.category || 'Fresh'}
                       </div>
 
                       
-                      <div className={`absolute top-4 right-4 text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-xl backdrop-blur-md border ${
+                      <div className={`absolute top-4 right-4 text-[10px] font-bold  px-3 py-1.5 rounded-xl backdrop-blur-md border ${
                         isOutOfStock 
                           ? 'bg-red-400/20 text-red-400 border-red-400/30' 
                           : isLowStock 
@@ -158,7 +158,7 @@ const FarmProfile = () => {
                       
                       {isOutOfStock && (
                         <div className="absolute inset-0 bg-primary/50 backdrop-blur-sm flex items-center justify-center">
-                          <span className="bg-white/5 text-white font-bold text-xs uppercase tracking-widest px-5 py-2.5 rounded-[32px]">
+                          <span className="bg-white/5 text-white font-bold text-xs  px-5 py-2.5 rounded-[32px]">
                             Out of Stock
                           </span>
                         </div>
@@ -177,7 +177,7 @@ const FarmProfile = () => {
 
                       <div className="flex justify-between items-center pt-3 border-t border-white/5">
                         <div className="flex flex-col">
-                          <span className="text-[10px] text-white/30 font-bold uppercase tracking-widest mb-0.5">
+                          <span className="text-[10px] text-white/30 font-bold  mb-0.5">
                             {product.category === 'livestock' ? 'Per animal' : 'Per kg'}
                           </span>
                           <div className="flex items-baseline gap-1">
@@ -185,15 +185,21 @@ const FarmProfile = () => {
                             <span className="text-2xl font-bold text-white er">{product.price}</span>
                           </div>
                         </div>
-                        <Button 
-                          size="icon"
-                          variant={isOutOfStock ? 'secondary' : 'primary'}
-                          onClick={() => !isOutOfStock && handleAddToCart(product)}
-                          disabled={isOutOfStock}
-                          className="rounded-[32px]"
-                        >
-                          <ShoppingCart size={20} />
-                        </Button>
+                        {(user?.role === 'customer' || !user) ? (
+                          <Button 
+                            size="icon"
+                            variant={isOutOfStock ? 'secondary' : 'primary'}
+                            onClick={() => !isOutOfStock && handleAddToCart(product)}
+                            disabled={isOutOfStock}
+                            className="rounded-[32px]"
+                          >
+                            <ShoppingCart size={20} />
+                          </Button>
+                        ) : (
+                          <div className="text-[10px] font-bold text-white/20 uppercase tracking-widest px-3 py-1.5 border border-white/5 rounded-full">
+                            Role: {user.role}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>

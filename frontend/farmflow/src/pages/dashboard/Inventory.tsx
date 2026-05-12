@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
-import apiClient from '../api/client';
+import apiClient from '../../api/client';
 import { Package, Plus, Search, Loader2, MapPin, Hash, Trash2, ShoppingBag, Scale } from 'lucide-react';
-import Dropdown from '../components/Dropdown';
-import Modal from '../components/Modal';
-import ConfirmModal from '../components/ConfirmModal';
-import Button from '../components/Button';
-import { useAuth } from '../context/AuthContext';
-import { useToast } from '../context/ToastContext';
+import Dropdown from '../../components/ui/Dropdown';
+import Modal from '../../components/modals/Modal';
+import ConfirmModal from '../../components/modals/ConfirmModal';
+import Button from '../../components/ui/Button';
+import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 
 const Inventory = () => {
   const { user } = useAuth();
@@ -140,12 +140,12 @@ const Inventory = () => {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-bg-primary/[0.02]">
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">Product</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">Category</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">Quantity</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">Location</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">Status</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40"></th>
+                  <th className="px-6 py-4 text-[10px] font-black  text-white/40">Product</th>
+                  <th className="px-6 py-4 text-[10px] font-black  text-white/40">Category</th>
+                  <th className="px-6 py-4 text-[10px] font-black  text-white/40">Quantity</th>
+                  <th className="px-6 py-4 text-[10px] font-black  text-white/40">Location</th>
+                  <th className="px-6 py-4 text-[10px] font-black  text-white/40">Status</th>
+                  <th className="px-6 py-4 text-[10px] font-black  text-white/40"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border-subtle">
@@ -161,9 +161,9 @@ const Inventory = () => {
                     <td className="px-6 py-4 text-white/40 text-sm">{item.warehouseLocation || 'Main Store'}</td>
                     <td className="px-6 py-4">
                       {item.quantity < 10 ? (
-                        <span className="px-2.5 py-1 rounded-full bg-red-500/10 text-red-400 text-[10px] font-black uppercase tracking-widest">Low Stock</span>
+                        <span className="px-2.5 py-1 rounded-full bg-red-500/10 text-red-400 text-[10px] font-black ">Low Stock</span>
                       ) : (
-                        <span className="px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest">In Stock</span>
+                        <span className="px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black ">In Stock</span>
                       )}
                     </td>
                     <td className="px-6 py-4 text-right">

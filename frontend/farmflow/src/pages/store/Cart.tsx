@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import apiClient from '../api/client';
+import apiClient from '../../api/client';
 import { Link } from 'react-router-dom';
 import { 
   Trash2, 
@@ -13,9 +13,9 @@ import {
   MapPin,
   ShieldCheck
 } from 'lucide-react';
-import Button from '../components/Button';
-import { useToast } from '../context/ToastContext';
-import AddressModal from '../components/AddressModal';
+import Button from '../../components/ui/Button';
+import { useToast } from '../../context/ToastContext';
+import AddressModal from '../../components/modals/AddressModal';
 
 const Cart = () => {
   const { showToast } = useToast();
@@ -278,7 +278,7 @@ const Cart = () => {
               
               <div className="flex items-center gap-3 px-5 py-4 bg-white/5 rounded-2xl border border-white/5">
                 <ShieldCheck size={20} className="text-primary/60" />
-                <p className="text-[10px] text-white/40 font-medium leading-tight uppercase tracking-widest">
+                <p className="text-[10px] text-white/40 font-medium leading-tight ">
                   Secure direct-to-farm checkout guaranteed by FarmFlow.
                 </p>
               </div>

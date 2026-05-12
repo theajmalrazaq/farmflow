@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import apiClient from '../api/client';
+import apiClient from '../../api/client';
 import { Target, Plus, Trash2, Loader2, Activity, ShoppingCart,  LayoutGrid, HeartPulse, Shield, Search, Pencil } from 'lucide-react';
-import Dropdown from '../components/Dropdown';
-import Modal from '../components/Modal';
-import ConfirmModal from '../components/ConfirmModal';
-import Button from '../components/Button';
-import { useAuth } from '../context/AuthContext';
-import { useToast } from '../context/ToastContext';
+import Dropdown from '../../components/ui/Dropdown';
+import Modal from '../../components/modals/Modal';
+import ConfirmModal from '../../components/modals/ConfirmModal';
+import Button from '../../components/ui/Button';
+import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 
 
 const Cattle = () => {

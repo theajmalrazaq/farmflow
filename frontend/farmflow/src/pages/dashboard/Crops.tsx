@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import apiClient from '../api/client';
+import apiClient from '../../api/client';
 import { 
   Sprout, 
   Plus, 
@@ -17,12 +17,12 @@ import {
   Pencil,
   Trash2
 } from 'lucide-react';
-import Dropdown from '../components/Dropdown';
-import Modal from '../components/Modal';
-import ConfirmModal from '../components/ConfirmModal';
-import Button from '../components/Button';
-import { useAuth } from '../context/AuthContext';
-import { useToast } from '../context/ToastContext';
+import Dropdown from '../../components/ui/Dropdown';
+import Modal from '../../components/modals/Modal';
+import ConfirmModal from '../../components/modals/ConfirmModal';
+import Button from '../../components/ui/Button';
+import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 
 
 const CropCard = ({ crop, onUpdate, onEdit }: any) => {
@@ -81,7 +81,7 @@ const CropCard = ({ crop, onUpdate, onEdit }: any) => {
         </div>
         <div className="flex items-center gap-3">
           <div 
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-black "
             style={{ backgroundColor: config.bg, color: config.color }}
           >
             {config.icon}
@@ -172,7 +172,7 @@ const CropCard = ({ crop, onUpdate, onEdit }: any) => {
                   <button
                     key={statusKey}
                     onClick={() => handleStatusChange(statusKey)}
-                    className={`w-full text-left px-4 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-widest transition-colors flex items-center gap-3 ${
+                    className={`w-full text-left px-4 py-2.5 rounded-2xl text-xs font-bold  transition-colors flex items-center gap-3 ${
                       crop.status === statusKey ? 'bg-primary/20 text-primary' : 'text-white/40 hover:bg-white/5 hover:text-white'
                     }`}
                   >

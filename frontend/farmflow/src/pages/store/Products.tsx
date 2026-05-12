@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
-import apiClient from '../api/client';
+import apiClient from '../../api/client';
 import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Search, ShoppingCart, Filter, Loader2, ShoppingBag, X, Edit, Trash2, Clock, CheckCircle2, XCircle, LayoutGrid } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import Dropdown from '../components/Dropdown';
-import Modal from '../components/Modal';
-import ConfirmModal from '../components/ConfirmModal';
-import Button from '../components/Button';
-import { useToast } from '../context/ToastContext';
+import { useAuth } from '../../context/AuthContext';
+import Dropdown from '../../components/ui/Dropdown';
+import Modal from '../../components/modals/Modal';
+import ConfirmModal from '../../components/modals/ConfirmModal';
+import Button from '../../components/ui/Button';
+import { useToast } from '../../context/ToastContext';
 
-const ProductCard = ({ product, onAddToCart, isAdminView, onDelete, onEdit }: any) => {
+const ProductCard = ({ product, onAddToCart, isAdminView, onDelete, onEdit, user }: any) => {
   const stock = product.quantity ?? 0;
   const isOutOfStock = stock === 0;
   const isLowStock = stock > 0 && stock <= 10;
@@ -48,13 +48,13 @@ const ProductCard = ({ product, onAddToCart, isAdminView, onDelete, onEdit }: an
 
         
         
-        <div className="absolute top-4 left-4 bg-primary/80 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full">
+        <div className="absolute top-4 left-4 bg-primary/80 backdrop-blur-md text-white text-[10px] font-bold  px-3 py-1.5 rounded-full">
           {product.category || 'Fresh'}
         </div>
 
         
         {!isAdminView && (
-          <div className={`absolute top-4 right-4 text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full backdrop-blur-md ${
+          <div className={`absolute top-4 right-4 text-[10px] font-bold  px-3 py-1.5 rounded-full backdrop-blur-md ${
             isOutOfStock 
               ? 'bg-red-500 text-white' 
               : isLowStock 
@@ -68,7 +68,7 @@ const ProductCard = ({ product, onAddToCart, isAdminView, onDelete, onEdit }: an
         
         {isOutOfStock && !isAdminView && (
           <div className="absolute inset-0 bg-primary/50 backdrop-blur-sm flex items-center justify-center">
-            <span className="bg-white/5 text-white font-bold text-xs uppercase tracking-widest px-5 py-2.5 rounded-[32px]">
+            <span className="bg-white/5 text-white font-bold text-xs  px-5 py-2.5 rounded-[32px]">
               Out of Stock
             </span>
           </div>
@@ -126,15 +126,15 @@ const ProductCard = ({ product, onAddToCart, isAdminView, onDelete, onEdit }: an
         {!isAdminView && (
           <div className="flex items-center gap-2">
             {isOutOfStock ? (
-              <span className="text-[10px] font-bold uppercase tracking-widest text-red-400 bg-red-400/10 border border-red-400/20 px-2.5 py-1 rounded-xl">
+              <span className="text-[10px] font-bold  text-red-400 bg-red-400/10 border border-red-400/20 px-2.5 py-1 rounded-xl">
                 Out of Stock
               </span>
             ) : isLowStock ? (
-              <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400 bg-amber-400/10 border border-amber-400/20 px-2.5 py-1 rounded-xl">
+              <span className="text-[10px] font-bold  text-amber-400 bg-amber-400/10 border border-amber-400/20 px-2.5 py-1 rounded-xl">
                 Only {stock} left
               </span>
             ) : (
-              <span className="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-xl">
+              <span className="text-[10px] font-bold  text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-xl">
                 {stock} in stock
               </span>
             )}
@@ -143,7 +143,7 @@ const ProductCard = ({ product, onAddToCart, isAdminView, onDelete, onEdit }: an
         
         <div className="flex justify-between items-center mt-2 pt-4 border-t border-white/5">
           <div className="flex flex-col">
-            <span className="text-[10px] text-white/30 font-bold uppercase tracking-widest mb-0.5">
+            <span className="text-[10px] text-white/30 font-bold  mb-0.5">
               {product.category === 'livestock' ? 'Per animal' : 'Per kg'}
             </span>
             <div className="flex items-baseline gap-1">
@@ -170,15 +170,24 @@ const ProductCard = ({ product, onAddToCart, isAdminView, onDelete, onEdit }: an
               </Button>
             </div>
           ) : (
-            <Button 
-              size="icon"
-              variant={isOutOfStock ? 'secondary' : 'primary'}
-              onClick={() => !isOutOfStock && onAddToCart(product)} 
-              disabled={isOutOfStock}
-              className="w-14 h-14 rounded-full"
-            >
-              <ShoppingCart size={22} />
-            </Button>
+            <>
+              {!isAdminView && (user?.role === 'customer' || !user) && (
+                <Button 
+                  size="icon"
+                  variant={isOutOfStock ? 'secondary' : 'primary'}
+                  onClick={() => !isOutOfStock && onAddToCart(product)} 
+                  disabled={isOutOfStock}
+                  className="w-14 h-14 rounded-full"
+                >
+                  <ShoppingCart size={22} />
+                </Button>
+              )}
+              {(!isAdminView && user?.role && user.role !== 'customer') && (
+                 <div className="text-[10px] font-bold text-white/20 uppercase tracking-widest px-4 py-2 border border-white/5 rounded-full">
+                   Role: {user.role}
+                 </div>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -372,8 +381,8 @@ const Products = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredProducts.map((product) => (
             <ProductCard 
-              key={product.id || product._id} 
               product={product} 
+              user={user}
               isAdminView={window.location.pathname.includes('/admin/products')}
               onEdit={handleEditClick}
               onDelete={async (id: string) => {
@@ -445,7 +454,7 @@ const Products = () => {
                 <div className="w-16 h-16 rounded-[24px] bg-white/5 flex items-center justify-center shadow-sm">
                   <Plus size={32} className="text-white/30" />
                 </div>
-                <span className="text-xs font-bold uppercase tracking-widest text-white/40">Upload Image</span>
+                <span className="text-xs font-bold  text-white/40">Upload Image</span>
                 <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
               </label>
             )}

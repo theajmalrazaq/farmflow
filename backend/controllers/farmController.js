@@ -50,7 +50,7 @@ exports.getAllFarms = async (req, res) => {
     }
 
     const farms = await User.find(filter)
-      .select('name farmName farmSlug farmDescription logo coverImage address');
+      .select('name farmName farmSlug farmDescription address');
 
     res.status(200).json({
       success: true,

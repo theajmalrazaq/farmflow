@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Leaf, ShieldCheck, Truck, Phone, CheckCircle2, Star, Plus, Minus, MapPin, Loader2 } from 'lucide-react';
-import apiClient from '../api/client';
-import Button from '../components/Button';
+import apiClient from '../../api/client';
+import Button from '../../components/ui/Button';
 
 const Landing = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
@@ -180,7 +180,7 @@ const Landing = () => {
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
                     <div className="absolute bottom-6 left-6 right-6">
-                      <div className="flex items-center gap-1.5 text-primary font-bold text-[10px] uppercase tracking-widest mb-2">
+                      <div className="flex items-center gap-1.5 text-primary font-bold text-[10px]  mb-2">
                         <MapPin size={10} />
                         {farm.address?.split(',').pop() || 'Pakistan'}
                       </div>
@@ -332,7 +332,7 @@ const Landing = () => {
             </h2>
             <div>
               <p className="text-2xl font-black text-white">Amina Rehman</p>
-              <p className="text-primary font-bold uppercase tracking-widest text-sm mt-1">Health-Conscious Mother, Lahore</p>
+              <p className="text-primary font-bold  text-sm mt-1">Health-Conscious Mother, Lahore</p>
             </div>
           </div>
         </div>
@@ -445,19 +445,19 @@ const Landing = () => {
           <div className="grid grid-cols-2 gap-6 relative">
             <div className="bg-white/5 backdrop-blur-3xl border border-white/10 p-10 rounded-[48px] flex flex-col gap-2">
               <span className="text-primary font-black text-4xl">0%</span>
-              <p className="text-white/30 font-bold uppercase tracking-widest text-[10px]">Platform Fees</p>
+              <p className="text-white/30 font-bold  text-[10px]">Platform Fees</p>
             </div>
             <div className="bg-white/5 backdrop-blur-3xl border border-white/10 p-10 rounded-[48px] flex flex-col gap-2 translate-y-12">
               <span className="text-primary font-black text-4xl">5k+</span>
-              <p className="text-white/30 font-bold uppercase tracking-widest text-[10px]">Monthly Buyers</p>
+              <p className="text-white/30 font-bold  text-[10px]">Monthly Buyers</p>
             </div>
             <div className="bg-white/5 backdrop-blur-3xl border border-white/10 p-10 rounded-[48px] flex flex-col gap-2 mt-4">
               <span className="text-primary font-black text-4xl">Direct</span>
-              <p className="text-white/30 font-bold uppercase tracking-widest text-[10px]">Payment Settlement</p>
+              <p className="text-white/30 font-bold  text-[10px]">Payment Settlement</p>
             </div>
             <div className="bg-white/5 backdrop-blur-3xl border border-white/10 p-10 rounded-[48px] flex flex-col gap-2 translate-y-12 mt-4">
               <span className="text-primary font-black text-4xl">Free</span>
-              <p className="text-white/30 font-bold uppercase tracking-widest text-[10px]">Stock Management</p>
+              <p className="text-white/30 font-bold  text-[10px]">Stock Management</p>
             </div>
           </div>
         </div>

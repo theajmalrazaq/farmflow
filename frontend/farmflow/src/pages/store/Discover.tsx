@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import apiClient from '../api/client';
+import apiClient from '../../api/client';
 import { MapPin, ArrowRight, Loader2, Search, Filter } from 'lucide-react';
-import Dropdown from '../components/Dropdown';
+import Dropdown from '../../components/ui/Dropdown';
 
 const Discover = () => {
   const [farms, setFarms] = useState<any[]>([]);

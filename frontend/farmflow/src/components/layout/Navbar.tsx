@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { Bell, Search, LogOut, Settings, ExternalLink, ChevronDown, ShoppingCart, Loader2, CheckCircle2, X, Package } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../../context/AuthContext';
+import { Bell, LogOut, Settings, ExternalLink, ChevronDown, ShoppingCart, Loader2, CheckCircle2 } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import apiClient from '../api/client';
-import Button from './Button';
+import apiClient from '../../api/client';
+import Button from '../ui/Button';
 
 const Navbar = ({ isAdmin = false }: { isAdmin?: boolean }) => {
   const { user, logout } = useAuth();
@@ -11,11 +11,9 @@ const Navbar = ({ isAdmin = false }: { isAdmin?: boolean }) => {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loadingNotifications, setLoadingNotifications] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
   const [cartCount, setCartCount] = useState(0);
   const navigate = useNavigate();
   const location = useLocation();
-  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -91,21 +89,32 @@ const Navbar = ({ isAdmin = false }: { isAdmin?: boolean }) => {
     navigate('/login');
   };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchTerm.trim()) {
-      navigate(`/shop?search=${encodeURIComponent(searchTerm)}`);
-    }
-  };
 
   return (
     <header className={`${isAdmin ? 'sticky border-b border-white/5 bg-bg-dark' : 'fixed top-10 left-1/2 -translate-x-1/2 w-[95%] max-w-7xl bg-bg-dark/60 backdrop-blur-xl border border-white/10 rounded-[32px] shadow-2xl shadow-black/50'} z-50 transition-all duration-500`}>
       <nav className={`flex justify-between items-center ${isAdmin ? 'p-4 w-full' : 'px-8 py-5 max-w-7xl mx-auto'}`}>
-        <div className="flex items-center gap-8">
+        <div className="flex items-center gap-12">
           {!isAdmin && (
-            <Link to="/" className="flex items-center gap-2">
-              <img src="/logo.png" alt="FarmFlow" className="h-12 w-auto" />
-            </Link>
+            <>
+              <Link to="/" className="flex items-center gap-2">
+                <img src="/logo.png" alt="FarmFlow" className="h-12 w-auto" />
+              </Link>
+
+              <div className="hidden md:flex items-center gap-8">
+                <Link 
+                  to="/discover" 
+                  className={`text-sm font-bold  transition-all ${isActive('/discover') ? 'text-primary' : 'text-white/40 hover:text-white'}`}
+                >
+                  Discover
+                </Link>
+                <Link 
+                  to="/shop" 
+                  className={`text-sm font-bold  transition-all ${isActive('/shop') ? 'text-primary' : 'text-white/40 hover:text-white'}`}
+                >
+                  Shop
+                </Link>
+              </div>
+            </>
           )}
         </div>
 
@@ -137,7 +146,7 @@ const Navbar = ({ isAdmin = false }: { isAdmin?: boolean }) => {
                     <div className="absolute right-0 mt-4 w-80 md:w-96 bg-bg-card border border-white/10 rounded-3xl p-4 z-50  animate-slideDown">
                       <div className="flex justify-between items-center px-2 py-2 border-b border-white/5 mb-4">
                         <div className="flex flex-col">
-                          <h3 className="text-sm font-bold text-white uppercase tracking-widest">Notifications</h3>
+                          <h3 className="text-sm font-bold text-white ">Notifications</h3>
                           <span className="text-[10px] font-black text-primary uppercase mt-0.5">
                             {unreadCount} New Alerts
                           </span>
@@ -188,7 +197,7 @@ const Navbar = ({ isAdmin = false }: { isAdmin?: boolean }) => {
                         ) : (
                           <div className="py-20 text-center flex flex-col items-center gap-3 text-white/20">
                             <CheckCircle2 size={32} />
-                            <p className="text-xs font-bold uppercase tracking-widest">All caught up</p>
+                            <p className="text-xs font-bold ">All caught up</p>
                           </div>
                         )}
                       </div>

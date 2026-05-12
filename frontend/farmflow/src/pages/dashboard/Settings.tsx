@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
-import apiClient from '../api/client';
+import { useAuth } from '../../context/AuthContext';
+import apiClient from '../../api/client';
 import { Save, User, MapPin, Image as ImageIcon, Loader2, Building, Key, X, ExternalLink, Copy } from 'lucide-react';
-import { useToast } from '../context/ToastContext';
+import { useToast } from '../../context/ToastContext';
 
 const Settings = () => {
   const { showToast } = useToast();
@@ -201,7 +201,7 @@ const Settings = () => {
                       )}
                     </div>
                     <div className="flex flex-col gap-1 flex-1">
-                      <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Recommended: 200x200px</p>
+                      <p className="text-[10px] font-bold text-white/40 ">Recommended: 200x200px</p>
                       <label className="text-sm font-bold text-primary hover:underline cursor-pointer">
                         {formData.logo ? 'Change Logo' : 'Upload Logo'}
                         <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'logo')} />
@@ -235,7 +235,7 @@ const Settings = () => {
                       )}
                     </div>
                     <div className="flex justify-between items-center">
-                      <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Recommended: 1200x400px</p>
+                      <p className="text-[10px] font-bold text-white/40 ">Recommended: 1200x400px</p>
                       <div className="flex gap-4">
                         {formData.coverImage && (
                           <button 
@@ -332,7 +332,7 @@ const Settings = () => {
             <form onSubmit={handleChangePassword} className="flex flex-col gap-5">
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-white/40 ml-2 uppercase tracking-widest">Current Password</label>
+                <label className="text-xs font-bold text-white/40 ml-2 ">Current Password</label>
                 <div className="relative flex items-center group">
                   <Key size={16} className="absolute left-4 text-white/30 group-focus-within:text-primary transition-colors" />
                   <input 
@@ -346,7 +346,7 @@ const Settings = () => {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-white/40 ml-2 uppercase tracking-widest">New Password</label>
+                <label className="text-xs font-bold text-white/40 ml-2 ">New Password</label>
                 <div className="relative flex items-center group">
                   <Key size={16} className="absolute left-4 text-white/30 group-focus-within:text-primary transition-colors" />
                   <input 
@@ -360,7 +360,7 @@ const Settings = () => {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-white/40 ml-2 uppercase tracking-widest">Confirm New Password</label>
+                <label className="text-xs font-bold text-white/40 ml-2 ">Confirm New Password</label>
                 <div className="relative flex items-center group">
                   <Key size={16} className="absolute left-4 text-white/30 group-focus-within:text-primary transition-colors" />
                   <input 

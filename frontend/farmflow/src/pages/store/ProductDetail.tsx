@@ -13,10 +13,10 @@ import {
   ShoppingCart,
   UserCircle
 } from 'lucide-react';
-import apiClient from '../api/client';
-import { useAuth } from '../context/AuthContext';
-import { useToast } from '../context/ToastContext';
-import Button from '../components/Button';
+import apiClient from '../../api/client';
+import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
+import Button from '../../components/ui/Button';
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -106,7 +106,7 @@ const ProductDetail = () => {
         className="flex items-center gap-2 text-white/40 hover:text-primary transition-colors group w-fit"
       >
         <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-        <span className="text-sm font-bold uppercase tracking-widest">Back to Marketplace</span>
+        <span className="text-sm font-bold ">Back to Marketplace</span>
       </Link>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -122,7 +122,7 @@ const ProductDetail = () => {
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center text-white/20 gap-4">
                 <ShoppingBag size={80} />
-                <span className="font-bold uppercase tracking-widest text-sm">No Image Available</span>
+                <span className="font-bold  text-sm">No Image Available</span>
               </div>
             )}
             
@@ -180,41 +180,47 @@ const ProductDetail = () => {
           <div className="flex flex-col gap-5 p-6 bg-white/5 border border-white/10 rounded-[24px] glass">
             <div className="flex items-center justify-between">
               <div className="flex flex-col">
-                <span className="text-[10px] text-white/30 font-black uppercase tracking-widest mb-1">Availability</span>
+                <span className="text-[10px] text-white/30 font-black  mb-1">Availability</span>
                 <span className={`text-sm font-bold ${isOutOfStock ? 'text-red-400' : 'text-primary'}`}>
                   {isOutOfStock ? 'Currently Unavailable' : `${stock} Units in Stock`}
                 </span>
               </div>
               <div className="flex flex-col text-right">
-                <span className="text-[10px] text-white/30 font-black uppercase tracking-widest mb-1">Delivery</span>
+                <span className="text-[10px] text-white/30 font-black  mb-1">Delivery</span>
                 <span className="text-sm font-bold text-white/80">24-48 Hours</span>
               </div>
             </div>
 
-            <Button 
-              size="lg"
-              variant={isOutOfStock ? 'secondary' : 'primary'}
-              disabled={isOutOfStock}
-              onClick={handleAddToCart}
-              className="w-full h-12 text-base"
-              leftIcon={<ShoppingCart size={20} />}
-            >
-              {isOutOfStock ? 'Out of Stock' : 'Add to Collection'}
-            </Button>
+            {(user?.role === 'customer' || !user) ? (
+              <Button 
+                size="lg"
+                variant={isOutOfStock ? 'secondary' : 'primary'}
+                disabled={isOutOfStock}
+                onClick={handleAddToCart}
+                className="w-full h-12 text-base"
+                leftIcon={<ShoppingCart size={20} />}
+              >
+                {isOutOfStock ? 'Out of Stock' : 'Add to Collection'}
+              </Button>
+            ) : (
+              <div className="w-full py-4 px-6 bg-white/5 border border-white/5 rounded-2xl text-center">
+                <p className="text-xs font-bold text-white/20 uppercase tracking-[0.2em]">Viewing as {user.role}</p>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-3 gap-3">
             <div className="flex flex-col items-center gap-2 p-3 rounded-2xl bg-white/[0.02] border border-white/5">
               <Truck size={18} className="text-primary" />
-              <span className="text-[9px] font-bold text-white/40 uppercase tracking-widest text-center">Fast Delivery</span>
+              <span className="text-[9px] font-bold text-white/40  text-center">Fast Delivery</span>
             </div>
             <div className="flex flex-col items-center gap-2 p-3 rounded-2xl bg-white/[0.02] border border-white/5">
               <ShieldCheck size={18} className="text-primary" />
-              <span className="text-[9px] font-bold text-white/40 uppercase tracking-widest text-center">Quality Guard</span>
+              <span className="text-[9px] font-bold text-white/40  text-center">Quality Guard</span>
             </div>
             <div className="flex flex-col items-center gap-2 p-3 rounded-2xl bg-white/[0.02] border border-white/5">
               <Clock size={18} className="text-primary" />
-              <span className="text-[9px] font-bold text-white/40 uppercase tracking-widest text-center">Always Fresh</span>
+              <span className="text-[9px] font-bold text-white/40  text-center">Always Fresh</span>
             </div>
           </div>
         </div>
@@ -239,7 +245,7 @@ const ProductDetail = () => {
                       </div>
                       <div>
                         <p className="text-sm font-bold text-white">{review.name || 'Anonymous User'}</p>
-                        <p className="text-[10px] text-white/30 font-medium uppercase tracking-widest">
+                        <p className="text-[10px] text-white/30 font-medium ">
                           {new Date(review.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
                         </p>
                       </div>

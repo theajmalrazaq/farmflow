@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import Modal from './Modal';
-import Button from './Button';
+import Modal from '../modals/Modal';
+import Button from '../ui/Button';
 import { MapPin, Home, Building, Navigation } from 'lucide-react';
 
 interface AddressModalProps {
@@ -65,7 +65,7 @@ const AddressModal: React.FC<AddressModalProps> = ({
               <div className="text-white/30 group-hover:text-primary transition-colors">
                 {type.icon}
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 group-hover:text-white transition-colors">
+              <span className="text-[10px] font-bold  text-white/40 group-hover:text-white transition-colors">
                 {type.label}
               </span>
             </button>

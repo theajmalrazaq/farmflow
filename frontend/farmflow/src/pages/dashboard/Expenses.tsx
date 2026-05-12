@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import apiClient from '../../api/client';
-import { Receipt, Plus, Download, TrendingDown, Loader2, DollarSign, Calendar, Tag, FileText, Search } from 'lucide-react';
+import { Receipt, Plus, TrendingDown, Loader2, DollarSign, Calendar, Tag, FileText, Search } from 'lucide-react';
 import Dropdown from '../../components/ui/Dropdown';
 import Modal from '../../components/modals/Modal';
 import Button from '../../components/ui/Button';

@@ -1,6 +1,6 @@
 const Notification = require('../models/Notification');
 
-// Get all notifications for current user
+
 exports.getNotifications = async (req, res) => {
   try {
     const notifications = await Notification.find({ recipient: req.user.id })
@@ -17,7 +17,7 @@ exports.getNotifications = async (req, res) => {
   }
 };
 
-// Mark notification as read
+
 exports.markAsRead = async (req, res) => {
   try {
     const notification = await Notification.findById(req.params.id);
@@ -42,7 +42,7 @@ exports.markAsRead = async (req, res) => {
   }
 };
 
-// Mark all as read
+
 exports.markAllAsRead = async (req, res) => {
   try {
     await Notification.updateMany(
@@ -53,6 +53,20 @@ exports.markAllAsRead = async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'All notifications marked as read',
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+exports.clearNotifications = async (req, res) => {
+  try {
+    await Notification.deleteMany({ recipient: req.user.id });
+
+    res.status(200).json({
+      success: true,
+      message: 'All notifications cleared',
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

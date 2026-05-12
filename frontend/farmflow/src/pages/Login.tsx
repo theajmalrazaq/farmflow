@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import apiClient from '../api/client';
-import { LogIn, Mail, Lock, Loader2 } from 'lucide-react';
+import { LogIn, Mail, Lock } from 'lucide-react';
+import Button from '../components/Button';
 
 
 const Login = () => {
@@ -20,7 +21,11 @@ const Login = () => {
     try {
       const res = await apiClient.post('/auth/login', { email, password });
       login(res.data.token, res.data.user);
-      navigate('/dashboard');
+      if (res.data.user.role === 'customer') {
+        navigate('/');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed. Please try again.');
     } finally {
@@ -35,7 +40,7 @@ const Login = () => {
       >
         <div className="flex flex-col items-center text-center">
           <Link to="/" className="flex items-center">
-            <h1 className="text-2xl font-bold font-syne ">Farm<span className='text-primary'>Flow</span></h1>
+            <img src="/logo.png" alt="FarmFlow" className="h-12 w-auto mb-2" />
           </Link>
           <h1 className="text-3xl font-bold mt-4 mb-2">Welcome back</h1>
           <p className="text-white/40 text-sm">Enter your credentials to access your account</p>
@@ -78,13 +83,16 @@ const Login = () => {
             </div>
           </div>
 
-          <button 
+          <Button 
             type="submit" 
-            className="w-full h-12 mt-2 bg-primary text-black font-bold rounded-full flex items-center justify-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={loading}
+            isLoading={loading}
+            fullWidth
+            size="lg"
+            className="mt-2"
+            leftIcon={<LogIn size={20} />}
           >
-            {loading ? <Loader2 className="animate-spin" size={20} /> : <><LogIn size={20} /> Sign In</>}
-          </button>
+            Sign In
+          </Button>
         </form>
 
         <p className="text-center text-sm text-white/40">

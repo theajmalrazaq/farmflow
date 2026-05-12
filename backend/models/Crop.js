@@ -34,7 +34,10 @@ const cropSchema = new mongoose.Schema({
     default: 'kg',
   },
   fieldArea: {
-    type: Number, // in acres or hectares
+    type: Number, 
+  },
+  location: {
+    type: String, 
   },
   status: {
     type: String,
@@ -48,7 +51,7 @@ const cropSchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
       },
-      stage: String, // e.g., "seedling", "flowering", "fruiting"
+      stage: String, 
       observation: String,
       photo: String,
     },

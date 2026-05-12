@@ -7,7 +7,7 @@
   src:
     local('Open Sans'),
     local('OpenSans'),
-    url(https://fonts.gstatic.com/s/productsans/v5/HYvgU2fE2nRJvZ5JFAumwegdm0LZdjqr5-oayXSOefg.woff2)
+    url(https:
       format('woff2');
 }
 
@@ -45,7 +45,7 @@
   }
 
   .primary-button {
-    @apply bg-primary text-black font-bold px-6 py-3 rounded-full hover:bg-primary-hover transition-all active:scale-95 shadow-lg shadow-primary/20;
+    @apply bg-primary text-black font-bold px-6 py-3 rounded-full hover:bg-primary-hover transition-all active:scale-95;
   }
 
   .no-scrollbar {
@@ -58,7 +58,7 @@
   }
 }
 
-/* Custom Scrollbar */
+
 ::-webkit-scrollbar {
   width: 8px;
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import apiClient from '../api/client';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { 
   Trash2, 
   Minus, 
@@ -11,16 +11,19 @@ import {
   ArrowLeft,
   CheckCircle2,
   MapPin,
-  Leaf,
   ShieldCheck
 } from 'lucide-react';
+import Button from '../components/Button';
+import { useToast } from '../context/ToastContext';
+import AddressModal from '../components/AddressModal';
 
 const Cart = () => {
-  const navigate = useNavigate();
+  const { showToast } = useToast();
   const [cart, setCart] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [placingOrder, setPlacingOrder] = useState(false);
+  const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const imageCache = useState<Record<string, string>>({})[0];
 
   useEffect(() => {
@@ -55,6 +58,7 @@ const Cart = () => {
     try {
       const res = await apiClient.put('/cart/update', { productId, quantity });
       setCart(res.data.cart);
+      window.dispatchEvent(new Event('cartUpdated'));
     } catch (err: any) {
       const res = await apiClient.get('/cart');
       setCart(res.data.cart);
@@ -69,15 +73,14 @@ const Cart = () => {
     try {
       const res = await apiClient.post('/cart/remove', { productId });
       setCart(res.data.cart);
+      window.dispatchEvent(new Event('cartUpdated'));
     } catch (err: any) {
       const res = await apiClient.get('/cart');
       setCart(res.data.cart);
     }
   };
 
-  const handlePlaceOrder = async () => {
-    const address = prompt("Please enter your delivery address:");
-    if (!address) return;
+  const handlePlaceOrder = async (address: string) => {
 
     setPlacingOrder(true);
     try {
@@ -94,11 +97,12 @@ const Cart = () => {
       });
 
       await apiClient.post('/cart/clear'); 
+      window.dispatchEvent(new Event('cartUpdated'));
       setOrderSuccess(true);
       window.scrollTo(0, 0);
     } catch (err: any) {
       console.error('Order placement failed', err);
-      alert(err.response?.data?.message || 'Failed to place order.');
+      showToast(err.response?.data?.message || 'Failed to place order.', 'error');
     } finally {
       setPlacingOrder(false);
     }
@@ -123,8 +127,8 @@ const Cart = () => {
               Your harvest is being prepared. Farmers have been notified and will begin fulfillment shortly.
             </p>
           </div>
-          <Link to="/discover" className="w-full bg-primary text-black font-bold py-4 rounded-full hover:brightness-110 transition-all shadow-lg shadow-primary/20">
-            Back to Marketplace
+          <Link to="/discover" className="w-full">
+            <Button fullWidth size="lg">Back to Marketplace</Button>
           </Link>
         </div>
       </div>
@@ -150,8 +154,8 @@ const Cart = () => {
                 {items.length === 0 ? "Your cart is currently empty." : `Review your selected organic products from verified farms across Pakistan.`}
               </p>
             </div>
-            <Link to="/shop" className="bg-white/5 border border-white/10 text-white font-bold px-6 py-3 rounded-full flex items-center gap-2 hover:bg-white/10 transition-all">
-              <ArrowLeft size={18} /> Continue Shopping
+            <Link to="/shop">
+              <Button variant="secondary" leftIcon={<ArrowLeft size={18} />}>Continue Shopping</Button>
             </Link>
           </div>
         </header>
@@ -167,8 +171,8 @@ const Cart = () => {
                 Looks like you haven't added any fresh produce yet. Start exploring our organic farms!
               </p>
             </div>
-            <Link to="/shop" className="bg-primary text-black font-bold px-10 py-4 rounded-full hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-primary/20">
-              Explore Marketplace
+            <Link to="/shop">
+              <Button size="lg">Explore Marketplace</Button>
             </Link>
           </div>
         ) : (
@@ -195,21 +199,25 @@ const Cart = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4 bg-white/5 px-4 py-2 rounded-2xl border border-white/5">
-                    <button 
+                  <div className="flex items-center gap-4 bg-white/5 px-2 py-2 rounded-2xl border border-white/5">
+                    <Button 
+                      size="icon"
+                      variant="ghost"
                       onClick={() => updateQuantity(item.product._id, item.quantity - 1)} 
                       disabled={item.quantity <= 1}
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-white/30 hover:text-primary disabled:opacity-20 transition-all hover:bg-white/5"
+                      className="w-10 h-10 rounded-xl"
                     >
                       <Minus size={16} />
-                    </button>
+                    </Button>
                     <span className="text-white font-bold text-lg min-w-[30px] text-center">{item.quantity}</span>
-                    <button 
+                    <Button 
+                      size="icon"
+                      variant="ghost"
                       onClick={() => updateQuantity(item.product._id, item.quantity + 1)}
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-white/30 hover:text-primary transition-all hover:bg-white/5"
+                      className="w-10 h-10 rounded-xl"
                     >
                       <Plus size={16} />
-                    </button>
+                    </Button>
                   </div>
 
                   <div className="text-right min-w-[120px]">
@@ -217,12 +225,14 @@ const Cart = () => {
                     <span className="text-white/30 text-xs font-bold uppercase">Total</span>
                   </div>
 
-                  <button 
+                  <Button 
+                    size="icon"
+                    variant="danger"
                     onClick={() => removeItem(item.product._id)} 
-                    className="w-12 h-12 rounded-2xl bg-white/5 text-white/30 hover:text-red-500 hover:bg-red-500/10 flex items-center justify-center transition-all"
+                    className="w-12 h-12 rounded-2xl"
                   >
                     <Trash2 size={20} />
-                  </button>
+                  </Button>
                 </div>
               ))}
             </div>
@@ -255,13 +265,16 @@ const Cart = () => {
                 </div>
               </div>
 
-              <button 
-                onClick={handlePlaceOrder}
-                disabled={placingOrder}
-                className="w-full h-16 bg-primary text-black font-bold text-lg rounded-full flex items-center justify-center gap-3 hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-primary/20"
+              <Button 
+                onClick={() => setIsAddressModalOpen(true)}
+                isLoading={placingOrder}
+                fullWidth
+                size="lg"
+                rightIcon={<ArrowRight size={22} />}
+                className="h-16 text-lg"
               >
-                {placingOrder ? <Loader2 className="animate-spin" /> : <>Place Order <ArrowRight size={22} /></>}
-              </button>
+                Place Order
+              </Button>
               
               <div className="flex items-center gap-3 px-5 py-4 bg-white/5 rounded-2xl border border-white/5">
                 <ShieldCheck size={20} className="text-primary/60" />
@@ -273,6 +286,12 @@ const Cart = () => {
           </div>
         )}
       </div>
+      <AddressModal 
+        isOpen={isAddressModalOpen}
+        onClose={() => setIsAddressModalOpen(false)}
+        onConfirm={handlePlaceOrder}
+        initialValue={localStorage.getItem('deliveryAddress') || ''}
+      />
     </div>
   );
 };

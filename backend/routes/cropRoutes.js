@@ -9,15 +9,14 @@ const {
   addGrowthProgress,
   deleteCrop,
 } = require('../controllers/cropController');
-const auth = require('../middleware/auth');
+const { auth, checkPermission } = require('../middleware/auth');
 
-// Protected routes (farmer only)
-router.post('/', auth, createCrop);
-router.get('/', auth, getMyCrops);
-router.get('/:id', auth, getCropById);
-router.put('/:id', auth, updateCrop);
-router.put('/:id/status', auth, updateCropStatus);
-router.post('/:id/growth', auth, addGrowthProgress);
-router.delete('/:id', auth, deleteCrop);
+
+router.post('/', auth, checkPermission('crops'), createCrop);
+router.get('/', auth, checkPermission('crops'), getMyCrops);
+router.get('/:id', auth, checkPermission('crops'), getCropById);
+router.put('/:id', auth, checkPermission('crops'), updateCrop);
+router.put('/:id/status', auth, checkPermission('crops'), updateCropStatus);
+router.delete('/:id', auth, checkPermission('crops'), deleteCrop);
 
 module.exports = router;

@@ -1,19 +1,38 @@
 import { useEffect, useState } from 'react';
 import apiClient from '../api/client';
-import { Link } from 'react-router-dom';
-import { Plus, Search, ShoppingCart, Filter, Loader2, ShoppingBag, X, Edit, Trash2} from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Plus, Search, ShoppingCart, Filter, Loader2, ShoppingBag, X, Edit, Trash2, Clock, CheckCircle2, XCircle, LayoutGrid } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import Dropdown from '../components/Dropdown';
+import Modal from '../components/Modal';
+import ConfirmModal from '../components/ConfirmModal';
+import Button from '../components/Button';
+import { useToast } from '../context/ToastContext';
 
-const ProductCard = ({ product, onAddToCart, isAdminView, onDelete }: any) => {
+const ProductCard = ({ product, onAddToCart, isAdminView, onDelete, onEdit }: any) => {
   const stock = product.quantity ?? 0;
   const isOutOfStock = stock === 0;
   const isLowStock = stock > 0 && stock <= 10;
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    try {
+      setIsDeleting(true);
+      await onDelete(product._id);
+      setIsDeleteModalOpen(false);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <div 
-      className={`group bg-bg-primary/50 backdrop-blur-xl border rounded-[32px] overflow-hidden transition-all duration-500 ${isOutOfStock ? 'border-white/5 opacity-75' : 'border-white/5 hover:border-primary/30 shadow-2xl shadow-black/20'}`}
+      className={`group bg-bg-primary/50 backdrop-blur-xl border rounded-[32px] overflow-hidden transition-all duration-500 ${isOutOfStock ? 'border-white/5 opacity-75' : 'border-white/5 hover:border-primary/30 /20'}`}
     >
-      <div className="h-64 relative overflow-hidden bg-white/5">
+      <Link to={`/product/${product._id}`} className="h-64 relative overflow-hidden bg-white/5 block">
         {product.image ? (
           <img 
             src={product.image} 
@@ -27,13 +46,13 @@ const ProductCard = ({ product, onAddToCart, isAdminView, onDelete }: any) => {
           </div>
         )}
 
-        {/* Category badge */}
-        {/* Category badge — top left */}
+        
+        
         <div className="absolute top-4 left-4 bg-primary/80 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full">
           {product.category || 'Fresh'}
         </div>
 
-        {/* Stock badge — top right, customer view only */}
+        
         {!isAdminView && (
           <div className={`absolute top-4 right-4 text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full backdrop-blur-md ${
             isOutOfStock 
@@ -46,7 +65,7 @@ const ProductCard = ({ product, onAddToCart, isAdminView, onDelete }: any) => {
           </div>
         )}
 
-        {/* Out of stock overlay */}
+        
         {isOutOfStock && !isAdminView && (
           <div className="absolute inset-0 bg-primary/50 backdrop-blur-sm flex items-center justify-center">
             <span className="bg-white/5 text-white font-bold text-xs uppercase tracking-widest px-5 py-2.5 rounded-[32px]">
@@ -54,12 +73,14 @@ const ProductCard = ({ product, onAddToCart, isAdminView, onDelete }: any) => {
             </span>
           </div>
         )}
-      </div>
+      </Link>
       
       <div className="p-6 flex flex-col gap-4">
         <div className="flex justify-between items-start">
           <div>
-            <h3 className="text-xl font-bold text-white group-hover:text-primary transition-colors leading-tight mb-1">{product.name}</h3>
+            <Link to={`/product/${product._id}`}>
+              <h3 className="text-xl font-bold text-white group-hover:text-primary transition-colors leading-tight mb-1">{product.name}</h3>
+            </Link>
             {!isAdminView && product.farmer && (
               <div className="flex items-center gap-1.5 mt-1">
                 <span className="text-[10px] text-white/40 font-medium uppercase tracking-wider">from</span>
@@ -77,9 +98,21 @@ const ProductCard = ({ product, onAddToCart, isAdminView, onDelete }: any) => {
               </div>
             )}
             {isAdminView && (
-              <span className={`text-[10px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded-md ${isOutOfStock ? 'bg-red-500/10 text-red-400' : isLowStock ? 'bg-amber-400/10 text-amber-400' : 'bg-primary/10 text-primary'}`}>
-                Stock: {stock}
-              </span>
+              <div className="flex flex-col gap-1.5">
+                <span className={`w-fit text-[10px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded-md ${isOutOfStock ? 'bg-red-500/10 text-red-400' : isLowStock ? 'bg-amber-400/10 text-amber-400' : 'bg-primary/10 text-primary'}`}>
+                  Stock: {stock}
+                </span>
+                <span className={`w-fit inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded-md ${
+                  product.status === 'approved' 
+                    ? 'bg-green-500/10 text-green-400' 
+                    : product.status === 'rejected'
+                    ? 'bg-red-500/10 text-red-400'
+                    : 'bg-amber-400/10 text-amber-400'
+                }`}>
+                  {product.status === 'approved' ? <CheckCircle2 size={10} /> : product.status === 'rejected' ? <XCircle size={10} /> : <Clock size={10} />}
+                  {product.status || 'pending'}
+                </span>
+              </div>
             )}
           </div>
 
@@ -89,19 +122,19 @@ const ProductCard = ({ product, onAddToCart, isAdminView, onDelete }: any) => {
           {product.description || 'Premium organic product directly from local farms.'}
         </p>
 
-        {/* Stock badge — customer view only */}
+        
         {!isAdminView && (
           <div className="flex items-center gap-2">
             {isOutOfStock ? (
-              <span className="text-[10px] font-bold uppercase tracking-widest text-red-500 bg-red-50 px-2.5 py-1 rounded-xl">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-red-400 bg-red-400/10 border border-red-400/20 px-2.5 py-1 rounded-xl">
                 Out of Stock
               </span>
             ) : isLowStock ? (
-              <span className="text-[10px] font-bold uppercase tracking-widest text-amber-600 bg-amber-50 px-2.5 py-1 rounded-xl">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400 bg-amber-400/10 border border-amber-400/20 px-2.5 py-1 rounded-xl">
                 Only {stock} left
               </span>
             ) : (
-              <span className="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/5 px-2.5 py-1 rounded-xl">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-xl">
                 {stock} in stock
               </span>
             )}
@@ -110,7 +143,9 @@ const ProductCard = ({ product, onAddToCart, isAdminView, onDelete }: any) => {
         
         <div className="flex justify-between items-center mt-2 pt-4 border-t border-white/5">
           <div className="flex flex-col">
-            <span className="text-[10px] text-white/30 font-bold uppercase tracking-widest mb-0.5">Price per kg</span>
+            <span className="text-[10px] text-white/30 font-bold uppercase tracking-widest mb-0.5">
+              {product.category === 'livestock' ? 'Per animal' : 'Per kg'}
+            </span>
             <div className="flex items-baseline gap-1">
               <span className="text-primary text-sm font-bold">Rs.</span>
               <span className="text-3xl font-bold text-white er">{product.price}</span>
@@ -119,45 +154,57 @@ const ProductCard = ({ product, onAddToCart, isAdminView, onDelete }: any) => {
           
           {isAdminView ? (
             <div className="flex gap-2">
-              <button 
-                onClick={() => alert('Edit functionality coming soon!')} 
-                className="w-12 h-12 rounded-[32px] bg-white/5/50 text-white flex items-center justify-center hover:bg-primary hover:text-white transition-all active:scale-90"
+              <Button 
+                size="icon"
+                variant="secondary"
+                onClick={() => onEdit(product)} 
               >
                 <Edit size={20} />
-              </button>
-              <button 
-                onClick={() => onDelete(product._id)} 
-                className="w-12 h-12 rounded-[32px] bg-red-500/10 text-red-400 flex items-center justify-center hover:bg-red-600 hover:text-white transition-all active:scale-90"
+              </Button>
+              <Button 
+                size="icon"
+                variant="danger"
+                onClick={() => setIsDeleteModalOpen(true)} 
               >
                 <Trash2 size={20} />
-              </button>
+              </Button>
             </div>
           ) : (
-            <button 
+            <Button 
+              size="icon"
+              variant={isOutOfStock ? 'secondary' : 'primary'}
               onClick={() => !isOutOfStock && onAddToCart(product)} 
               disabled={isOutOfStock}
-              className={`w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-90 ${
-                isOutOfStock 
-                  ? 'bg-white/10 text-zinc-300 cursor-not-allowed' 
-                  : 'bg-primary text-black hover:brightness-110 shadow-lg shadow-primary/10'
-              }`}
+              className="w-14 h-14 rounded-full"
             >
               <ShoppingCart size={22} />
-            </button>
+            </Button>
           )}
         </div>
       </div>
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDelete}
+        title="Delete Product"
+        message={`Are you sure you want to delete "${product.name}"? This will remove it from the marketplace.`}
+        confirmText="Delete Product"
+        isLoading={isDeleting}
+      />
     </div>
   );
 };
 
 
 const Products = () => {
+  const { showToast } = useToast();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<any>(null);
   const [newProduct, setNewProduct] = useState({ 
     name: '', 
     description: '', 
@@ -166,7 +213,6 @@ const Products = () => {
     category: 'other',
     image: '' 
   });
-
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -178,34 +224,65 @@ const Products = () => {
     }
   };
 
-  const handleAddProduct = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await apiClient.post('/products', newProduct);
-      setProducts([...products, res.data.product]);
-      setIsAddModalOpen(false);
+      if (editingProduct) {
+        const res = await apiClient.put(`/products/${editingProduct._id}`, newProduct);
+        setProducts(products.map(p => p._id === editingProduct._id ? res.data.product : p));
+        showToast('Product updated successfully!', 'success');
+      } else {
+        const res = await apiClient.post('/products', newProduct);
+        setProducts([...products, res.data.product]);
+        showToast('Product submitted! It will be listed after SuperAdmin approval.', 'info');
+      }
+      setIsModalOpen(false);
+      setEditingProduct(null);
       setNewProduct({ name: '', description: '', price: '', quantity: '', category: 'other', image: '' });
     } catch (err: any) {
-      console.error('Failed to add product', err);
-      alert(err.response?.data?.message || 'Failed to add product');
+      console.error('Failed to save product', err);
+      showToast(err.response?.data?.message || 'Failed to save product', 'error');
+    }
+  };
+
+  const handleEditClick = (product: any) => {
+    setEditingProduct(product);
+    setNewProduct({
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      quantity: product.quantity,
+      category: product.category || 'other',
+      image: product.image || ''
+    });
+    setIsModalOpen(true);
+  };
+
+  const [category, setCategory] = useState('all');
+  const [sortBy, setSortBy] = useState('newest');
+
+  const fetchProducts = async () => {
+    setLoading(true);
+    try {
+      const isInventoryView = window.location.pathname.includes('/admin/products');
+      const endpoint = isInventoryView ? '/products?mine=true' : '/products';
+      const res = await apiClient.get(endpoint, { 
+        params: { 
+          category: category !== 'all' ? category : undefined,
+          sort: sortBy
+        } 
+      });
+      setProducts(res.data.products || []);
+    } catch (err) {
+      console.error('Failed to fetch products', err);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const isInventoryView = window.location.pathname.includes('/admin/products');
-        const endpoint = isInventoryView ? '/products?mine=true' : '/products';
-        const res = await apiClient.get(endpoint);
-        setProducts(res.data.products || []);
-      } catch (err) {
-        console.error('Failed to fetch products', err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchProducts();
-  }, [window.location.pathname]);
+  }, [window.location.pathname, category, sortBy]);
 
   const filteredProducts = products.filter(p => 
     p.name?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -220,12 +297,16 @@ const Products = () => {
             <p className="text-white/40 mt-1 text-sm font-medium">Manage your listed harvests and monitor real-time stock levels.</p>
           </div>
           {(user?.role === 'admin' || user?.role === 'farmer') && (
-            <button 
-              onClick={() => setIsAddModalOpen(true)}
-              className="bg-primary text-black font-bold px-5 py-2.5 rounded-[32px] flex items-center gap-2 hover:brightness-110 active:scale-95 transition-all"
+            <Button 
+              onClick={() => {
+                setEditingProduct(null);
+                setNewProduct({ name: '', description: '', price: '', quantity: '', category: 'other', image: '' });
+                setIsModalOpen(true);
+              }}
+              leftIcon={<Plus size={20} />}
             >
-              <Plus size={20} /> Add Product
-            </button>
+              Add Product
+            </Button>
           )}
         </header>
       ) : (
@@ -236,16 +317,6 @@ const Products = () => {
           <p className="text-white/40 text-lg leading-relaxed">
             Discover fresh, certified organic products direct from verified farms across Pakistan.
           </p>
-          {(user?.role === 'admin' || user?.role === 'farmer') && (
-            <div className="mt-8 flex justify-center">
-              <button 
-                onClick={() => setIsAddModalOpen(true)}
-                className="bg-primary text-black font-bold px-8 py-3.5 rounded-full flex items-center gap-2 hover:brightness-110 active:scale-95 transition-all"
-              >
-                <Plus size={20} /> Add Product
-              </button>
-            </div>
-          )}
         </header>
       )}
 
@@ -255,20 +326,41 @@ const Products = () => {
             <input 
               type="text" 
               placeholder="Search for organic produce..." 
-              className={`w-full bg-bg-primary border border-white/10 rounded-full py-4 pl-12 pr-4 focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/5 text-white transition-all ${window.location.pathname.includes('/admin/products') ? 'py-3' : ''}`}
+              className={`w-full bg-bg-primary border border-white/10 rounded-full pl-12 pr-4 focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/5 text-white transition-all ${window.location.pathname.includes('/admin/products') ? 'h-12' : 'h-14'}`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="flex gap-3">
-            <button className={`bg-white/5 border border-white/10 text-white px-8 py-4 rounded-full flex items-center gap-2 hover:bg-white/10 transition-all font-bold ${window.location.pathname.includes('/admin/products') ? 'py-3' : ''}`}>
-              <Filter size={18} /> Filter
-            </button>
-            <select className={`bg-white/5 border border-white/10 text-white px-8 py-4 rounded-full focus:outline-none focus:border-primary/50 transition-all cursor-pointer font-bold appearance-none ${window.location.pathname.includes('/admin/products') ? 'py-3' : ''}`}>
-              <option>Newest First</option>
-              <option>Price: Low to High</option>
-              <option>Price: High to Low</option>
-            </select>
+          <div className="flex gap-3 min-w-[200px]">
+            <Dropdown 
+              value={category === 'all' ? 'All Categories' : category}
+              onChange={setCategory}
+              className="min-w-[180px]"
+              size={window.location.pathname.includes('/admin/products') ? 'md' : 'lg'}
+              icon={<Filter size={18} />}
+              options={[
+                { value: 'all', label: 'All Categories' },
+                { value: 'vegetables', label: 'Vegetables' },
+                { value: 'fruits', label: 'Fruits' },
+                { value: 'grains', label: 'Grains' },
+                { value: 'dairy', label: 'Dairy' },
+                { value: 'eggs', label: 'Eggs' },
+                { value: 'honey', label: 'Honey' },
+                { value: 'livestock', label: 'Livestock' },
+                { value: 'other', label: 'Other' },
+              ]}
+            />
+            <Dropdown 
+              value={sortBy === 'newest' ? 'Newest First' : sortBy === 'price_asc' ? 'Price: Low to High' : 'Price: High to Low'}
+              onChange={setSortBy}
+              className="min-w-[180px]"
+              size={window.location.pathname.includes('/admin/products') ? 'md' : 'lg'}
+              options={[
+                { value: 'newest', label: 'Newest First' },
+                { value: 'price_asc', label: 'Price: Low to High' },
+                { value: 'price_desc', label: 'Price: High to Low' },
+              ]}
+            />
           </div>
         </div>
       
@@ -283,23 +375,30 @@ const Products = () => {
               key={product.id || product._id} 
               product={product} 
               isAdminView={window.location.pathname.includes('/admin/products')}
+              onEdit={handleEditClick}
               onDelete={async (id: string) => {
-                if (!confirm('Are you sure you want to delete this product?')) return;
                 try {
                   await apiClient.delete(`/products/${id}`);
                   setProducts(products.filter(p => p._id !== id));
                 } catch (err: any) {
                   console.error('Failed to delete product', err);
-                  alert(err.response?.data?.message || 'Failed to delete product');
+                  showToast(err.response?.data?.message || 'Failed to delete product', 'error');
+                  throw err;
                 }
               }}
               onAddToCart={async (p: any) => {
+                if (!user) {
+                  navigate('/register');
+                  return;
+                }
+                
                 try {
                   await apiClient.post('/cart/add', { productId: p._id || p.id, quantity: 1 });
-                  alert('Added to cart successfully!');
+                  window.dispatchEvent(new Event('cartUpdated'));
+                  showToast('Added to cart successfully!', 'success');
                 } catch (err: any) {
                   console.error('Failed to add to cart', err);
-                  alert(err.response?.data?.message || 'Failed to add to cart');
+                  showToast(err.response?.data?.message || 'Failed to add to cart', 'error');
                 }
               }}
             />
@@ -317,112 +416,109 @@ const Products = () => {
       )}
 
 
-        {isAddModalOpen && (
-          <div 
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-          >
-            <div 
-              className="bg-transparent/50 backdrop-blur-xl border border-white/10 rounded-[32px] p-8 w-full max-w-lg glass overflow-hidden"
-            >
-              <div className="flex justify-between items-center mb-6">
-                <div>
-                  <h2 className="text-xl font-bold text-white ">Add New Product</h2>
-                  <p className="text-white/40 text-sm">List your fresh farm produce for customers.</p>
-                </div>
-                <button onClick={() => setIsAddModalOpen(false)} className="p-2 hover:bg-white/5 rounded-full text-white/30 transition-colors">
-                  <X size={24} />
+      <Modal 
+        isOpen={isModalOpen} 
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingProduct(null);
+          setNewProduct({ name: '', description: '', price: '', quantity: '', category: 'other', image: '' });
+        }}
+        title={editingProduct ? "Edit Product" : "Add New Product"}
+        subtitle={editingProduct ? "Update your product details and stock information." : "Submit your product for SuperAdmin approval before it goes live."}
+        maxWidth="max-w-lg"
+      >
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div className="flex flex-col items-center gap-4 py-4 bg-white/5 rounded-3xl border-2 border-dashed border-white/10">
+            {newProduct.image ? (
+              <div className="relative group w-32 h-32">
+                <img src={newProduct.image} className="w-full h-full object-cover rounded-[24px]" />
+                <button 
+                  type="button"
+                  onClick={() => setNewProduct({...newProduct, image: ''})}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X size={14} />
                 </button>
               </div>
-              
-              <form onSubmit={handleAddProduct} className="flex flex-col gap-5">
-                <div className="flex flex-col items-center gap-4 py-4 bg-white/5 rounded-3xl border-2 border-dashed border-white/10">
-                  {newProduct.image ? (
-                    <div className="relative group w-32 h-32">
-                      <img src={newProduct.image} className="w-full h-full object-cover rounded-[32px]" />
-                      <button 
-                        type="button"
-                        onClick={() => setNewProduct({...newProduct, image: ''})}
-                        className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X size={14} />
-                      </button>
-                    </div>
-                  ) : (
-                    <label className="flex flex-col items-center gap-2 cursor-pointer hover:text-primary transition-colors">
-                      <div className="w-16 h-16 rounded-[32px] bg-white/5 flex items-center justify-center shadow-sm">
-                        <Plus size={32} className="text-white/30" />
-                      </div>
-                      <span className="text-xs font-bold uppercase tracking-widest text-white/40">Upload Image</span>
-                      <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
-                    </label>
-                  )}
+            ) : (
+              <label className="flex flex-col items-center gap-2 cursor-pointer hover:text-primary transition-colors">
+                <div className="w-16 h-16 rounded-[24px] bg-white/5 flex items-center justify-center shadow-sm">
+                  <Plus size={32} className="text-white/30" />
                 </div>
-
-                <input 
-                  type="text" 
-                  placeholder="Product Name (e.g. Organic Heritage Tomatoes)" 
-                  className="w-full bg-white/5 border border-white/10 rounded-[32px] py-3.5 px-5 focus:outline-none focus:border-primary transition-all text-white font-medium"
-                  value={newProduct.name}
-                  onChange={(e) => setNewProduct({...newProduct, name: e.target.value})}
-                  required
-                />
-                
-                <textarea 
-                  placeholder="Tell customers about your product..." 
-                  className="w-full bg-white/5 border border-white/10 rounded-[32px] py-3.5 px-5 focus:outline-none focus:border-primary transition-all text-white font-medium min-h-[100px]"
-                  value={newProduct.description}
-                  onChange={(e) => setNewProduct({...newProduct, description: e.target.value})}
-                  required
-                />
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="relative">
-                    <span className="absolute left-5 top-1/2 -translate-y-1/2 text-white/30 font-bold">Rs.</span>
-                    <input 
-                      type="number" 
-                      placeholder="Price" 
-                      className="w-full bg-white/5 border border-white/10 rounded-[32px] py-3.5 pl-12 pr-5 focus:outline-none focus:border-primary transition-all text-white font-medium"
-                      value={newProduct.price}
-                      onChange={(e) => setNewProduct({...newProduct, price: e.target.value})}
-                      required
-                    />
-                  </div>
-                  <input 
-                    type="number" 
-                    placeholder="Quantity" 
-                    className="w-full bg-white/5 border border-white/10 rounded-[32px] py-3.5 px-5 focus:outline-none focus:border-primary transition-all text-white font-medium"
-                    value={newProduct.quantity}
-                    onChange={(e) => setNewProduct({...newProduct, quantity: e.target.value})}
-                    required
-                  />
-                </div>
-
-                <select 
-                  className="w-full bg-white/5 border border-white/10 rounded-[32px] py-3.5 px-5 focus:outline-none focus:border-primary transition-all text-white font-medium appearance-none"
-                  value={newProduct.category}
-                  onChange={(e) => setNewProduct({...newProduct, category: e.target.value})}
-                  required
-                >
-                  <option value="other">Select Category</option>
-                  <option value="vegetables">Vegetables</option>
-                  <option value="fruits">Fruits</option>
-                  <option value="grains">Grains</option>
-                  <option value="dairy">Dairy</option>
-                  <option value="eggs">Eggs</option>
-                  <option value="honey">Honey</option>
-                  <option value="other">Other</option>
-                </select>
-
-                <button 
-                  type="submit"
-                  className="w-full bg-primary text-black font-bold py-4 rounded-[32px] mt-2 hover:brightness-110 transition-all"
-                >
-                  List Product Now
-                </button>
-              </form>
-            </div>
+                <span className="text-xs font-bold uppercase tracking-widest text-white/40">Upload Image</span>
+                <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
+              </label>
+            )}
           </div>
-        )}
+
+          <input 
+            type="text" 
+            placeholder="Product Name (e.g. Organic Heritage Tomatoes)" 
+            className="w-full bg-white/5 border border-white/10 rounded-full py-2.5 px-6 focus:outline-none focus:border-primary transition-all text-white font-medium"
+            value={newProduct.name}
+            onChange={(e) => setNewProduct({...newProduct, name: e.target.value})}
+            required
+          />
+          
+          <textarea 
+            placeholder="Tell customers about your product..." 
+            className="w-full bg-white/5 border border-white/10 rounded-[20px] py-2.5 px-6 focus:outline-none focus:border-primary transition-all text-white font-medium min-h-[80px]"
+            value={newProduct.description}
+            onChange={(e) => setNewProduct({...newProduct, description: e.target.value})}
+            required
+          />
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="relative">
+              <span className="absolute left-6 top-1/2 -translate-y-1/2 text-white/30 font-bold">Rs.</span>
+              <input 
+                type="number" 
+                placeholder="Price" 
+                className="w-full bg-white/5 border border-white/10 rounded-full py-2.5 pl-14 pr-6 focus:outline-none focus:border-primary transition-all text-white font-medium"
+                value={newProduct.price}
+                onChange={(e) => setNewProduct({...newProduct, price: e.target.value})}
+                required
+              />
+            </div>
+            <input 
+              type="number" 
+              placeholder="Quantity" 
+              className="w-full bg-white/5 border border-white/10 rounded-full py-2.5 px-6 focus:outline-none focus:border-primary transition-all text-white font-medium"
+              value={newProduct.quantity}
+              onChange={(e) => setNewProduct({...newProduct, quantity: e.target.value})}
+              required
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-bold text-white/40 ml-2">Category</label>
+            <Dropdown 
+              value={newProduct.category}
+              onChange={(val) => setNewProduct({...newProduct, category: val})}
+              icon={<LayoutGrid size={18} />}
+              options={[
+                { value: 'vegetables', label: 'Vegetables' },
+                { value: 'fruits', label: 'Fruits' },
+                { value: 'grains', label: 'Grains' },
+                { value: 'dairy', label: 'Dairy' },
+                { value: 'eggs', label: 'Eggs' },
+                { value: 'honey', label: 'Honey' },
+                { value: 'livestock', label: 'Livestock' },
+                { value: 'other', label: 'Other' },
+              ]}
+            />
+          </div>
+
+          <Button 
+            type="submit"
+            fullWidth
+            size="lg"
+            className="mt-2"
+          >
+            {editingProduct ? "Save Changes" : "Submit for Approval"}
+          </Button>
+        </form>
+      </Modal>
 
     </div>
   );

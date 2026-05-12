@@ -9,6 +9,18 @@ const employeeSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  email: {
+    type: String,
+    required: true,
+  },
+  password: {
+    type: String,
+    required: true,
+  },
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  },
   salary: {
     type: Number,
     required: true,

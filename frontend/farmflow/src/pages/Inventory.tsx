@@ -1,13 +1,24 @@
 import { useEffect, useState } from 'react';
 import apiClient from '../api/client';
-import { Package, Plus, Search, MoreVertical, Loader2, X, MapPin, Hash, Trash2 } from 'lucide-react';
+import { Package, Plus, Search, Loader2, MapPin, Hash, Trash2, ShoppingBag, Scale } from 'lucide-react';
+import Dropdown from '../components/Dropdown';
+import Modal from '../components/Modal';
+import ConfirmModal from '../components/ConfirmModal';
+import Button from '../components/Button';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
 const Inventory = () => {
+  const { user } = useAuth();
+  const { showToast } = useToast();
   const [items, setItems] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const [formData, setFormData] = useState({
     product: '',
@@ -66,49 +77,61 @@ const Inventory = () => {
         notes: ''
       });
       fetchInventory();
-    } catch (err) {
+      showToast('Stock record added successfully!', 'success');
+    } catch (err: any) {
       console.error('Failed to add inventory', err);
+      showToast(err.response?.data?.message || 'Failed to add inventory', 'error');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to remove this stock record?')) return;
+  const handleDelete = async () => {
+    if (!deletingId) return;
+    setIsDeleting(true);
     try {
-      await apiClient.delete(`/inventory/${id}`);
-      setItems(items.filter(item => item._id !== id));
-    } catch (err) {
+      await apiClient.delete(`/inventory/${deletingId}`);
+      setItems(items.filter(item => item._id !== deletingId));
+      showToast('Stock record removed', 'info');
+      setIsDeleteModalOpen(false);
+    } catch (err: any) {
       console.error('Failed to delete inventory', err);
+      showToast('Failed to delete inventory record', 'error');
+    } finally {
+      setIsDeleting(false);
+      setDeletingId(null);
     }
   };
 
   return (
     <div className="flex flex-col gap-8">
-      <header className="flex justify-between items-center mb-8">
+      <header className="flex justify-between items-center">
         <div>
           <h1 className="text-xl font-bold text-white ">Inventory Management</h1>
           <p className="text-white/40 mt-1 text-sm font-medium">Track your product stock levels and storage locations.</p>
         </div>
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="bg-primary text-black font-bold px-5 py-2.5 rounded-full flex items-center gap-2 hover:brightness-110 active:scale-95 transition-all"
-        >
-          <Plus size={20} /> Add Stock
-        </button>
+        {(user?.role === 'farmer' || (user?.role === 'employee' && user?.permissions?.inventory)) && (
+          <Button 
+            onClick={() => setIsModalOpen(true)}
+            leftIcon={<Plus size={20} />}
+          >
+            Add Stock
+          </Button>
+        )}
       </header>
 
-      <div className="bg-bg-primary border border-white/10 rounded-3xl overflow-hidden glass">
-        <div className="p-6 border-b border-white/10">
-          <div className="relative flex items-center max-w-md group">
-            <Search size={18} className="absolute left-4 text-white/40 group-focus-within:text-primary transition-colors" />
-            <input 
-              type="text" 
-              placeholder="Search inventory..." 
-              className="w-full bg-white/5 border border-white/10 rounded-full py-2.5 pl-12 pr-4 focus:outline-none focus:border-primary/50 transition-all"
-            />
-          </div>
+      <div className="flex flex-col md:flex-row gap-4 mb-4 bg-white/5 p-4 rounded-[32px] border border-white/10">
+        <div className="flex-1 relative flex items-center group">
+          <Search size={18} className="absolute left-4 text-white/30 group-focus-within:text-primary transition-colors" />
+          <input 
+            type="text" 
+            placeholder="Search inventory..." 
+            className="w-full h-12 bg-bg-primary border border-white/10 rounded-full pl-12 pr-4 focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/5 text-white transition-all"
+          />
         </div>
+      </div>
+
+      <div className="bg-bg-primary border border-white/10 rounded-3xl overflow-hidden glass">
 
         {loading ? (
           <div className="py-20 flex justify-center"><Loader2 className="animate-spin text-primary" size={40} /></div>
@@ -138,14 +161,17 @@ const Inventory = () => {
                     <td className="px-6 py-4 text-white/40 text-sm">{item.warehouseLocation || 'Main Store'}</td>
                     <td className="px-6 py-4">
                       {item.quantity < 10 ? (
-                        <span className="px-2.5 py-1 rounded-full bg-red-500/10 text-red-500 text-[10px] font-black uppercase tracking-widest">Low Stock</span>
+                        <span className="px-2.5 py-1 rounded-full bg-red-500/10 text-red-400 text-[10px] font-black uppercase tracking-widest">Low Stock</span>
                       ) : (
                         <span className="px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest">In Stock</span>
                       )}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <button 
-                        onClick={() => handleDelete(item._id)}
+                        onClick={() => {
+                          setDeletingId(item._id);
+                          setIsDeleteModalOpen(true);
+                        }}
                         className="p-2 text-white/30 hover:text-red-500 hover:bg-red-500/5 rounded-xl transition-all"
                       >
                         <Trash2 size={16} />
@@ -166,114 +192,116 @@ const Inventory = () => {
         )}
       </div>
 
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-primary/40 backdrop-blur-sm p-4">
-          <div className="bg-bg-primary w-full max-w-xl rounded-[32px] border border-white/10 overflow-hidden">
-            <div className="p-8 border-b border-white/5 flex justify-between items-center bg-white/5">
-              <div>
-                <h2 className="text-xl font-bold text-white ">Add Stock Entry</h2>
-                <p className="text-white/40 text-sm">Update the inventory levels for your products.</p>
-              </div>
-              <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-white/5 rounded-full transition-colors text-white/30">
-                <X size={24} />
-              </button>
+      <Modal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)}
+        title="Add Stock Entry"
+        subtitle="Update the inventory levels for your products."
+        maxWidth="max-w-xl"
+      >
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div>
+            <label className="block text-sm font-bold text-white/80 mb-1.5">Select Product</label>
+            <Dropdown 
+              value={formData.product}
+              onChange={(val) => setFormData({...formData, product: val})}
+              icon={<ShoppingBag size={18} />}
+              placeholder={products.length === 0 ? "No products found" : "Select Product"}
+              options={products.map(p => ({ value: p._id, label: p.name }))}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-bold text-white/80 mb-1.5">Quantity</label>
+              <input 
+                type="number" 
+                className="w-full px-5 py-2.5 rounded-[20px] bg-white/5 border border-white/10 focus:border-primary outline-none transition-all font-medium text-white"
+                placeholder="0"
+                value={formData.quantity}
+                onChange={(e) => setFormData({...formData, quantity: e.target.value})}
+                required
+              />
             </div>
 
-            <form onSubmit={handleSubmit} className="p-8 flex flex-col gap-6 bg-bg-primary">
-              <div>
-                <label className="block text-sm font-bold text-white/80 mb-2">Select Product</label>
-                <select 
-                  className="w-full px-5 py-3.5 rounded-[32px] bg-white/5 border border-white/10 focus:border-primary outline-none transition-all font-medium appearance-none"
-                  value={formData.product}
-                  onChange={(e) => setFormData({...formData, product: e.target.value})}
-                  required
-                >
-                  {products.length === 0 && <option value="">No products found</option>}
-                  {products.map((p) => (
-                    <option key={p._id} value={p._id}>{p.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-bold text-white/80 mb-2">Quantity</label>
-                  <input 
-                    type="number" 
-                    className="w-full px-5 py-3.5 rounded-[32px] bg-white/5 border border-white/10 focus:border-primary outline-none transition-all font-medium"
-                    placeholder="0"
-                    value={formData.quantity}
-                    onChange={(e) => setFormData({...formData, quantity: e.target.value})}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-white/80 mb-2">Unit</label>
-                  <select 
-                    className="w-full px-5 py-3.5 rounded-[32px] bg-white/5 border border-white/10 focus:border-primary outline-none transition-all font-medium appearance-none"
-                    value={formData.unit}
-                    onChange={(e) => setFormData({...formData, unit: e.target.value})}
-                  >
-                    <option value="kg">kg</option>
-                    <option value="tons">tons</option>
-                    <option value="liters">liters</option>
-                    <option value="pieces">pieces</option>
-                    <option value="dozens">dozens</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-bold text-white/80 mb-2">Location</label>
-                  <div className="relative">
-                    <MapPin size={18} className="absolute left-5 top-4 text-white/30" />
-                    <input 
-                      type="text" 
-                      className="w-full pl-12 pr-5 py-3.5 rounded-[32px] bg-white/5 border border-white/10 focus:border-primary outline-none transition-all font-medium"
-                      placeholder="e.g. Warehouse A"
-                      value={formData.warehouseLocation}
-                      onChange={(e) => setFormData({...formData, warehouseLocation: e.target.value})}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-white/80 mb-2">Batch Number</label>
-                  <div className="relative">
-                    <Hash size={18} className="absolute left-5 top-4 text-white/30" />
-                    <input 
-                      type="text" 
-                      className="w-full pl-12 pr-5 py-3.5 rounded-[32px] bg-white/5 border border-white/10 focus:border-primary outline-none transition-all font-medium"
-                      placeholder="e.g. B-2024-001"
-                      value={formData.batchNumber}
-                      onChange={(e) => setFormData({...formData, batchNumber: e.target.value})}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex gap-4 mt-4">
-                <button 
-                  type="button" 
-                  onClick={() => setIsModalOpen(false)}
-                  className="flex-1 py-4 rounded-[32px] font-bold text-white/40 hover:bg-white/5 transition-all"
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit" 
-                  disabled={submitting || products.length === 0}
-                  className="flex-1 bg-primary text-black py-4 rounded-[32px] font-bold hover:brightness-110 transition-all disabled:opacity-50"
-                >
-                  {submitting ? 'Saving...' : 'Add to Inventory'}
-                </button>
-              </div>
-            </form>
+            <div>
+              <label className="block text-sm font-bold text-white/80 mb-1.5">Unit</label>
+              <Dropdown 
+                value={formData.unit}
+                onChange={(val) => setFormData({...formData, unit: val})}
+                icon={<Scale size={18} />}
+                options={[
+                  { value: 'kg', label: 'kg' },
+                  { value: 'tons', label: 'tons' },
+                  { value: 'liters', label: 'liters' },
+                  { value: 'pieces', label: 'pieces' },
+                  { value: 'dozens', label: 'dozens' },
+                ]}
+              />
+            </div>
           </div>
-        </div>
-      )}
+
+          <div className="grid grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-bold text-white/80 mb-1.5">Location</label>
+              <div className="relative">
+                <MapPin size={18} className="absolute left-5 top-4 text-white/30" />
+                <input 
+                  type="text" 
+                  className="w-full pl-12 pr-5 py-2.5 rounded-[20px] bg-white/5 border border-white/10 focus:border-primary outline-none transition-all font-medium text-white"
+                  placeholder="e.g. Warehouse A"
+                  value={formData.warehouseLocation}
+                  onChange={(e) => setFormData({...formData, warehouseLocation: e.target.value})}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-white/80 mb-1.5">Batch Number</label>
+              <div className="relative">
+                <Hash size={18} className="absolute left-5 top-4 text-white/30" />
+                <input 
+                  type="text" 
+                  className="w-full pl-12 pr-5 py-2.5 rounded-[20px] bg-white/5 border border-white/10 focus:border-primary outline-none transition-all font-medium text-white"
+                  placeholder="e.g. B-2024-001"
+                  value={formData.batchNumber}
+                  onChange={(e) => setFormData({...formData, batchNumber: e.target.value})}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-4 mt-4">
+            <button 
+              type="button" 
+              onClick={() => setIsModalOpen(false)}
+              className="flex-1 py-3 rounded-full font-bold text-white/40 hover:bg-white/5 transition-all"
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit" 
+              disabled={submitting || products.length === 0}
+              className="flex-1 bg-primary text-black py-3 rounded-full font-bold hover:brightness-110 transition-all disabled:opacity-50"
+            >
+              {submitting ? 'Saving...' : 'Add to Inventory'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setDeletingId(null);
+        }}
+        onConfirm={handleDelete}
+        title="Remove Stock Record"
+        message="Are you sure you want to remove this stock record? This action cannot be undone."
+        confirmText="Remove Record"
+        isLoading={isDeleting}
+      />
     </div>
   );
 };

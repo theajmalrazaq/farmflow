@@ -1,10 +1,16 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import apiClient from '../api/client';
-import { MapPin, Users, Info, ChevronRight, Loader2, ArrowLeft, ShoppingBag, ShoppingCart } from 'lucide-react';
+import { Users, Info, Loader2, ArrowLeft, ShoppingBag, ShoppingCart } from 'lucide-react';
+import Button from '../components/Button';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
 const FarmProfile = () => {
+  const { showToast } = useToast();
   const { farmSlug } = useParams();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [farmData, setFarmData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -23,12 +29,18 @@ const FarmProfile = () => {
   }, [farmSlug]);
 
   const handleAddToCart = async (product: any) => {
+    if (!user) {
+      navigate('/register');
+      return;
+    }
+
     try {
       await apiClient.post('/cart/add', { productId: product._id, quantity: 1 });
-      alert(`${product.name} added to cart!`);
+      window.dispatchEvent(new Event('cartUpdated'));
+      showToast(`${product.name} added to cart!`, 'success');
     } catch (err: any) {
       console.error('Failed to add to cart', err);
-      alert(err.response?.data?.message || 'Please login to add items to cart.');
+      showToast(err.response?.data?.message || 'Please login to add items to cart.', 'error');
     }
   };
 
@@ -65,7 +77,7 @@ const FarmProfile = () => {
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-primary/80 to-primary-dark" />
         )}
-        <Link to="/discover" className="absolute top-8 left-8 z-20 w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white/40 transition-all">
+        <Link to="/discover" className="absolute top-32 left-8 z-20 w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white/40 transition-all border border-white/10">
           <ArrowLeft size={24} />
         </Link>
       </div>
@@ -95,9 +107,6 @@ const FarmProfile = () => {
               </div>
             </div>
           </div>
-          <button className="bg-primary text-black px-10 py-5 rounded-[24px] font-bold text-sm hover:scale-105 transition-all active:scale-95">
-            Contact Farm
-          </button>
         </div>
 
         <div className="mt-20">
@@ -117,7 +126,7 @@ const FarmProfile = () => {
                     key={product._id} 
                     className={`group bg-white/5 border rounded-[32px] overflow-hidden transition-all duration-500 ${isOutOfStock ? 'border-white/5 opacity-75' : 'border-white/5 hover:border-primary/20'}`}
                   >
-                    <div className="h-56 relative overflow-hidden bg-white/5/30">
+                    <Link to={`/product/${product._id}`} className="h-56 relative overflow-hidden bg-white/5/30 block">
                       {product.image ? (
                         <img 
                           src={product.image} 
@@ -130,23 +139,23 @@ const FarmProfile = () => {
                         </div>
                       )}
 
-                      {/* Category badge — top left */}
+                      
                       <div className="absolute top-4 left-4 bg-primary/80 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-xl">
                         {product.category || 'Fresh'}
                       </div>
 
-                      {/* Stock badge — top right */}
-                      <div className={`absolute top-4 right-4 text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-xl backdrop-blur-md ${
+                      
+                      <div className={`absolute top-4 right-4 text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-xl backdrop-blur-md border ${
                         isOutOfStock 
-                          ? 'bg-red-500 text-white' 
+                          ? 'bg-red-400/20 text-red-400 border-red-400/30' 
                           : isLowStock 
-                          ? 'bg-amber-400 text-white' 
-                          : 'bg-primary/20 text-primary'
+                          ? 'bg-amber-400/20 text-amber-400 border-amber-400/30' 
+                          : 'bg-primary/20 text-primary border-primary/30'
                       }`}>
                         {isOutOfStock ? 'Out of Stock' : isLowStock ? `Only ${stock} left` : `${stock} kg`}
                       </div>
 
-                      {/* Out of stock overlay */}
+                      
                       {isOutOfStock && (
                         <div className="absolute inset-0 bg-primary/50 backdrop-blur-sm flex items-center justify-center">
                           <span className="bg-white/5 text-white font-bold text-xs uppercase tracking-widest px-5 py-2.5 rounded-[32px]">
@@ -154,11 +163,13 @@ const FarmProfile = () => {
                           </span>
                         </div>
                       )}
-                    </div>
+                    </Link>
 
                     <div className="p-6 flex flex-col gap-3">
                       <div>
-                        <h3 className="text-lg font-bold text-white group-hover:text-primary transition-colors leading-tight">{product.name}</h3>
+                        <Link to={`/product/${product._id}`}>
+                          <h3 className="text-lg font-bold text-white group-hover:text-primary transition-colors leading-tight">{product.name}</h3>
+                        </Link>
                         {product.description && (
                           <p className="text-white/40 text-sm line-clamp-2 leading-relaxed mt-1 font-medium">{product.description}</p>
                         )}
@@ -166,23 +177,23 @@ const FarmProfile = () => {
 
                       <div className="flex justify-between items-center pt-3 border-t border-white/5">
                         <div className="flex flex-col">
-                          <span className="text-[10px] text-white/30 font-bold uppercase tracking-widest mb-0.5">Per kg</span>
+                          <span className="text-[10px] text-white/30 font-bold uppercase tracking-widest mb-0.5">
+                            {product.category === 'livestock' ? 'Per animal' : 'Per kg'}
+                          </span>
                           <div className="flex items-baseline gap-1">
                             <span className="text-primary text-xs font-bold">Rs.</span>
                             <span className="text-2xl font-bold text-white er">{product.price}</span>
                           </div>
                         </div>
-                        <button 
+                        <Button 
+                          size="icon"
+                          variant={isOutOfStock ? 'secondary' : 'primary'}
                           onClick={() => !isOutOfStock && handleAddToCart(product)}
                           disabled={isOutOfStock}
-                          className={`w-12 h-12 rounded-[32px] flex items-center justify-center transition-all active:scale-90 ${
-                            isOutOfStock
-                              ? 'bg-white/10 text-white/20 cursor-not-allowed'
-                              : 'bg-primary text-black hover:brightness-110 shadow-lg shadow-primary/10'
-                          }`}
+                          className="rounded-[32px]"
                         >
                           <ShoppingCart size={20} />
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -197,6 +208,7 @@ const FarmProfile = () => {
           )}
         </div>
       </div>
+
     </div>
   );
 };

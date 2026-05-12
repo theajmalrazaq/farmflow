@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import apiClient from '../api/client';
-import { UserPlus, Mail, Lock, User, Briefcase, Loader2, MapPin, Image as ImageIcon, ArrowLeft, ArrowRight } from 'lucide-react';
+import { UserPlus, Mail, Lock, User, Briefcase, MapPin, Image as ImageIcon, ArrowLeft, ArrowRight } from 'lucide-react';
+import Button from '../components/Button';
 
 const Register = () => {
   const [step, setStep] = useState(1);
@@ -37,11 +38,15 @@ const Register = () => {
     try {
       const res = await apiClient.post('/auth/register', formData);
       login(res.data.token, res.data.user);
-      navigate('/');
+      if (res.data.user.role === 'customer') {
+        navigate('/');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Registration failed.');
-      // If error happens in step 2, we stay there. If it's a basic field error, maybe we should go back? 
-      // Usually validation errors for email/pass happen in step 1.
+      
+      
     } finally {
       setLoading(false);
     }
@@ -52,7 +57,7 @@ const Register = () => {
       <div className="w-full max-w-[480px] p-10 rounded-[32px] bg-bg-primary/5 backdrop-blur-xl border border-white/10 flex flex-col gap-8">
         <div className="flex flex-col items-center text-center">
           <Link to="/" className="flex items-center">
-            <h1 className="text-2xl font-bold font-syne ">Farm<span className='text-primary'>Flow</span></h1>
+            <img src="/logo.png" alt="FarmFlow" className="h-12 w-auto mb-2" />
           </Link>
           <h1 className="text-3xl font-bold mt-4 mb-2">
             {step === 1 ? 'Create Account' : 'Farm Details'}
@@ -131,17 +136,17 @@ const Register = () => {
                 </div>
               </div>
 
-              <button 
+              <Button 
                 type="submit" 
-                className="w-full h-12 mt-4 bg-primary text-black font-bold rounded-full flex items-center justify-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={loading}
+                isLoading={loading}
+                fullWidth
+                size="lg"
+                className="mt-4"
+                rightIcon={formData.role === 'farmer' ? <ArrowRight size={20} /> : undefined}
+                leftIcon={formData.role !== 'farmer' ? <UserPlus size={20} /> : undefined}
               >
-                {formData.role === 'farmer' ? (
-                  <>Next Step <ArrowRight size={20} /></>
-                ) : (
-                  loading ? <Loader2 className="animate-spin" size={20} /> : <><UserPlus size={20} /> Create Account</>
-                )}
-              </button>
+                {formData.role === 'farmer' ? 'Next Step' : 'Create Account'}
+              </Button>
             </>
           ) : (
             <>
@@ -204,20 +209,23 @@ const Register = () => {
               </div>
 
               <div className="flex gap-4 mt-4">
-                <button 
+                <Button 
                   type="button"
+                  variant="secondary"
                   onClick={() => setStep(1)}
-                  className="flex-1 h-12 bg-white/10 text-white font-bold rounded-full flex items-center justify-center gap-2 hover:bg-zinc-200 transition-all"
+                  className="flex-1"
+                  leftIcon={<ArrowLeft size={20} />}
                 >
-                  <ArrowLeft size={20} /> Back
-                </button>
-                <button 
+                  Back
+                </Button>
+                <Button 
                   type="submit" 
-                  className="flex-[2] h-12 bg-primary text-black font-bold rounded-full flex items-center justify-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={loading}
+                  isLoading={loading}
+                  className="flex-[2]"
+                  leftIcon={<UserPlus size={20} />}
                 >
-                  {loading ? <Loader2 className="animate-spin" size={20} /> : <><UserPlus size={20} /> Complete Signup</>}
-                </button>
+                  Complete Signup
+                </Button>
               </div>
             </>
           )}

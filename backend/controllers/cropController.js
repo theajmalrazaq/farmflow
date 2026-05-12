@@ -1,16 +1,16 @@
 const Crop = require('../models/Crop');
 
-// Create crop
+
 exports.createCrop = async (req, res) => {
   try {
-    const { name, cropType, plantedDate, expectedHarvestDate, quantity, unit, fieldArea, notes } = req.body;
+    const { name, cropType, plantedDate, expectedHarvestDate, quantity, unit, fieldArea, location, notes } = req.body;
 
     if (!name || !cropType || !plantedDate || !expectedHarvestDate || !quantity) {
       return res.status(400).json({ message: 'Please provide all required fields' });
     }
 
     const crop = await Crop.create({
-      farmer: req.user.id,
+      farmer: req.farmerId,
       name,
       cropType,
       plantedDate,
@@ -18,6 +18,7 @@ exports.createCrop = async (req, res) => {
       quantity,
       unit,
       fieldArea,
+      location,
       notes,
     });
 
@@ -30,10 +31,10 @@ exports.createCrop = async (req, res) => {
   }
 };
 
-// Get my crops
+
 exports.getMyCrops = async (req, res) => {
   try {
-    const crops = await Crop.find({ farmer: req.user.id })
+    const crops = await Crop.find({ farmer: req.farmerId })
       .sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -46,7 +47,7 @@ exports.getMyCrops = async (req, res) => {
   }
 };
 
-// Get single crop
+
 exports.getCropById = async (req, res) => {
   try {
     const crop = await Crop.findById(req.params.id);
@@ -55,8 +56,8 @@ exports.getCropById = async (req, res) => {
       return res.status(404).json({ message: 'Crop not found' });
     }
 
-    // Check if user is the farmer who created the crop
-    if (crop.farmer.toString() !== req.user.id) {
+    
+    if (req.user.role !== 'admin' && crop.farmer.toString() !== req.farmerId?.toString()) {
       return res.status(403).json({ message: 'Not authorized to view this crop' });
     }
 
@@ -69,7 +70,7 @@ exports.getCropById = async (req, res) => {
   }
 };
 
-// Update crop
+
 exports.updateCrop = async (req, res) => {
   try {
     let crop = await Crop.findById(req.params.id);
@@ -78,8 +79,8 @@ exports.updateCrop = async (req, res) => {
       return res.status(404).json({ message: 'Crop not found' });
     }
 
-    // Check if user is the farmer who created the crop
-    if (crop.farmer.toString() !== req.user.id) {
+    
+    if (req.user.role !== 'admin' && crop.farmer.toString() !== req.farmerId?.toString()) {
       return res.status(403).json({ message: 'Not authorized to update this crop' });
     }
 
@@ -97,7 +98,7 @@ exports.updateCrop = async (req, res) => {
   }
 };
 
-// Update crop status
+
 exports.updateCropStatus = async (req, res) => {
   try {
     const { status } = req.body;
@@ -112,7 +113,7 @@ exports.updateCropStatus = async (req, res) => {
       return res.status(404).json({ message: 'Crop not found' });
     }
 
-    if (crop.farmer.toString() !== req.user.id) {
+    if (req.user.role !== 'admin' && crop.farmer.toString() !== req.farmerId?.toString()) {
       return res.status(403).json({ message: 'Not authorized to update this crop' });
     }
 
@@ -133,7 +134,7 @@ exports.updateCropStatus = async (req, res) => {
   }
 };
 
-// Add growth progress
+
 exports.addGrowthProgress = async (req, res) => {
   try {
     const { stage, observation, photo } = req.body;
@@ -148,7 +149,7 @@ exports.addGrowthProgress = async (req, res) => {
       return res.status(404).json({ message: 'Crop not found' });
     }
 
-    if (crop.farmer.toString() !== req.user.id) {
+    if (req.user.role !== 'admin' && crop.farmer.toString() !== req.farmerId?.toString()) {
       return res.status(403).json({ message: 'Not authorized to update this crop' });
     }
 
@@ -171,7 +172,7 @@ exports.addGrowthProgress = async (req, res) => {
   }
 };
 
-// Delete crop
+
 exports.deleteCrop = async (req, res) => {
   try {
     const crop = await Crop.findById(req.params.id);
@@ -180,7 +181,7 @@ exports.deleteCrop = async (req, res) => {
       return res.status(404).json({ message: 'Crop not found' });
     }
 
-    if (crop.farmer.toString() !== req.user.id) {
+    if (req.user.role !== 'admin' && crop.farmer.toString() !== req.farmerId?.toString()) {
       return res.status(403).json({ message: 'Not authorized to delete this crop' });
     }
 

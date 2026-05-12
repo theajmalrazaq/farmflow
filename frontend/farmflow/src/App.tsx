@@ -1,10 +1,10 @@
 import { BrowserRouter as Router, Routes, Route, Navigate} from 'react-router-dom';
-
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Products from './pages/Products';
+import ProductDetail from './pages/ProductDetail';
 import Crops from './pages/Crops';
 import Inventory from './pages/Inventory';
 import Expenses from './pages/Expenses';
@@ -18,14 +18,19 @@ import Settings from './pages/Settings';
 import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
 import Discover from './pages/Discover';
-import SuperAdmin from './pages/SuperAdmin';
+import { ToastProvider } from './context/ToastContext';
 import './index.css';
 
-const ProtectedRoute = ({ children, requireAdmin = false }: { children: React.ReactNode, requireAdmin?: boolean }) => {
+const ProtectedRoute = ({ children, allowedRoles = [] }: { children: React.ReactNode, allowedRoles?: string[] }) => {
   const { token, loading, user } = useAuth();
+  
   if (loading) return <div className="h-screen w-full flex items-center justify-center bg-bg-primary text-black/40">Loading...</div>;
   if (!token) return <Navigate to="/login" />;
-  if (requireAdmin && user?.role === 'customer') return <Navigate to="/" />;
+  
+  if (allowedRoles.length > 0 && user && !allowedRoles.includes(user.role)) {
+    return <Navigate to="/" />;
+  }
+  
   return <>{children}</>;
 };
 
@@ -80,6 +85,12 @@ function AppRoutes() {
           <Products />
         </StorefrontLayout>
       } />
+
+      <Route path="/product/:id" element={
+        <StorefrontLayout>
+          <ProductDetail />
+        </StorefrontLayout>
+      } />
       
       <Route path="/cart" element={
         <StorefrontLayout>
@@ -87,23 +98,12 @@ function AppRoutes() {
         </StorefrontLayout>
       } />
 
-      <Route path="/:farmSlug" element={
-        <StorefrontLayout>
-          <FarmProfile />
-        </StorefrontLayout>
-      } />
-
-      <Route path="/superadmin" element={
-        <StorefrontLayout>
-          <SuperAdmin />
-        </StorefrontLayout>
-      } />
 
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       
       <Route path="/dashboard" element={
-        <ProtectedRoute requireAdmin={true}>
+        <ProtectedRoute allowedRoles={['admin', 'farmer', 'employee']}>
           <Layout>
             <Dashboard />
           </Layout>
@@ -111,7 +111,7 @@ function AppRoutes() {
       } />
       
       <Route path="/admin/products" element={
-        <ProtectedRoute requireAdmin={true}>
+        <ProtectedRoute allowedRoles={['farmer', 'employee']}>
           <Layout>
             <Products />
           </Layout>
@@ -119,7 +119,7 @@ function AppRoutes() {
       } />
 
       <Route path="/crops" element={
-        <ProtectedRoute requireAdmin={true}>
+        <ProtectedRoute allowedRoles={['farmer', 'employee']}>
           <Layout>
             <Crops />
           </Layout>
@@ -127,7 +127,7 @@ function AppRoutes() {
       } />
 
       <Route path="/inventory" element={
-        <ProtectedRoute requireAdmin={true}>
+        <ProtectedRoute allowedRoles={['farmer', 'employee']}>
           <Layout>
             <Inventory />
           </Layout>
@@ -135,7 +135,7 @@ function AppRoutes() {
       } />
 
       <Route path="/employees" element={
-        <ProtectedRoute requireAdmin={true}>
+        <ProtectedRoute allowedRoles={['farmer']}>
           <Layout>
             <Employees />
           </Layout>
@@ -143,7 +143,7 @@ function AppRoutes() {
       } />
 
       <Route path="/cattles" element={
-        <ProtectedRoute requireAdmin={true}>
+        <ProtectedRoute allowedRoles={['farmer', 'employee']}>
           <Layout>
             <Cattle />
           </Layout>
@@ -151,7 +151,7 @@ function AppRoutes() {
       } />
 
       <Route path="/expenses" element={
-        <ProtectedRoute requireAdmin={true}>
+        <ProtectedRoute allowedRoles={['farmer', 'employee']}>
           <Layout>
             <Expenses />
           </Layout>
@@ -159,7 +159,7 @@ function AppRoutes() {
       } />
 
       <Route path="/admin/orders" element={
-        <ProtectedRoute requireAdmin={true}>
+        <ProtectedRoute allowedRoles={['farmer', 'employee']}>
           <Layout>
             <Orders />
           </Layout>
@@ -167,11 +167,17 @@ function AppRoutes() {
       } />
 
       <Route path="/dashboard/settings" element={
-        <ProtectedRoute requireAdmin={true}>
+        <ProtectedRoute allowedRoles={['farmer', 'admin', 'customer']}>
           <Layout>
             <Settings />
           </Layout>
         </ProtectedRoute>
+      } />
+
+      <Route path="/:farmSlug" element={
+        <StorefrontLayout>
+          <FarmProfile />
+        </StorefrontLayout>
       } />
 
       <Route path="*" element={<Navigate to="/" />} />
@@ -182,9 +188,11 @@ function AppRoutes() {
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <AppRoutes />
-      </Router>
+      <ToastProvider>
+        <Router>
+          <AppRoutes />
+        </Router>
+      </ToastProvider>
     </AuthProvider>
   );
 }

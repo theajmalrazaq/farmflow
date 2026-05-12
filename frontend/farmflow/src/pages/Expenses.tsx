@@ -1,8 +1,15 @@
 import { useEffect, useState } from 'react';
 import apiClient from '../api/client';
-import { Receipt, Plus, Download, TrendingDown, Loader2, X, DollarSign, Calendar, Tag, FileText } from 'lucide-react';
-
+import { Receipt, Plus, Download, TrendingDown, Loader2, DollarSign, Calendar, Tag, FileText, Search } from 'lucide-react';
+import Dropdown from '../components/Dropdown';
+import Modal from '../components/Modal';
+import Button from '../components/Button';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+  
 const Expenses = () => {
+  const { user } = useAuth();
+  const { showToast } = useToast();
   const [expenseData, setExpenseData] = useState<any>({
     expenses: [],
     totalExpenses: 0
@@ -48,30 +55,45 @@ const Expenses = () => {
         notes: ''
       });
       fetchExpenses();
-    } catch (err) {
+      showToast('Expense recorded successfully!', 'success');
+    } catch (err: any) {
       console.error('Failed to add expense', err);
+      showToast(err.response?.data?.message || 'Failed to record expense', 'error');
     }
   };
 
   return (
     <div className="flex flex-col gap-8">
-      <header className="flex justify-between items-center mb-8">
+      <header className="flex justify-between items-center">
         <div>
           <h1 className="text-xl font-bold text-white ">Expense Tracking</h1>
           <p className="text-white/40 mt-1 text-sm font-medium">Monitor your spending and manage farm finances.</p>
         </div>
         <div className="flex gap-3">
-          <button className="bg-white/5 border border-white/10 text-white font-bold px-5 py-2.5 rounded-[32px] flex items-center gap-2 hover:bg-white/10 transition-all">
-            <Download size={20} /> Export
-          </button>
-          <button 
-            onClick={() => setIsModalOpen(true)}
-            className="bg-primary text-black font-bold px-5 py-2.5 rounded-[32px] flex items-center gap-2 hover:brightness-110 active:scale-95 transition-all"
-          >
-            <Plus size={20} /> Add Expense
-          </button>
+          <Button variant="secondary" leftIcon={<Download size={20} />}>
+            Export
+          </Button>
+          {(user?.role === 'farmer' || (user?.role === 'employee' && user?.permissions?.expenses)) && (
+            <Button 
+              onClick={() => setIsModalOpen(true)}
+              leftIcon={<Plus size={20} />}
+            >
+              Add Expense
+            </Button>
+          )}
         </div>
       </header>
+
+      <div className="flex flex-col md:flex-row gap-4 bg-white/5 p-4 rounded-[32px] border border-white/10">
+        <div className="flex-1 relative flex items-center group">
+          <Search size={18} className="absolute left-4 text-white/30 group-focus-within:text-primary transition-colors" />
+          <input 
+            type="text" 
+            placeholder="Search expenses by description or category..." 
+            className="w-full h-12 bg-bg-primary border border-white/10 rounded-full pl-12 pr-4 focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/5 text-white transition-all"
+          />
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-bg-primary/50 backdrop-blur-xl border border-white/10 rounded-[32px] p-6 flex items-center gap-6 glass">
@@ -140,105 +162,95 @@ const Expenses = () => {
         )}
       </div>
 
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-primary/40 backdrop-blur-sm p-4">
-          <div className="bg-bg-primary w-full max-w-xl rounded-[32px] border border-white/10 overflow-hidden">
-            <div className="p-8 border-b border-white/5 flex justify-between items-center bg-white/5">
-              <div>
-                <h2 className="text-xl font-bold text-white ">Add New Expense</h2>
-                <p className="text-white/40 text-sm">Log your spending to keep your farm records up to date.</p>
-              </div>
-              <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-white/5 rounded-full transition-colors text-white/30">
-                <X size={24} />
-              </button>
+      <Modal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)}
+        title="Add New Expense"
+        subtitle="Log your spending to keep your farm records up to date."
+        maxWidth="max-w-xl"
+      >
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+          <div>
+            <label className="block text-sm font-bold text-white/80 mb-2">Description</label>
+            <div className="relative">
+              <FileText size={18} className="absolute left-5 top-4 text-white/30" />
+              <input 
+                type="text" 
+                className="w-full pl-12 pr-5 py-3.5 rounded-[24px] bg-white/5 border border-white/10 focus:border-primary outline-none transition-all font-medium text-white"
+                placeholder="e.g. Purchase of organic fertilizers"
+                value={formData.description}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-bold text-white/80 mb-2">Category</label>
+              <Dropdown 
+                value={formData.category}
+                onChange={(val) => setFormData({...formData, category: val})}
+                icon={<Tag size={18} />}
+                options={[
+                  { value: 'seeds', label: 'Seeds' },
+                  { value: 'fertilizer', label: 'Fertilizer' },
+                  { value: 'labor', label: 'Labor' },
+                  { value: 'equipment', label: 'Equipment' },
+                  { value: 'fuel', label: 'Fuel' },
+                  { value: 'water', label: 'Water' },
+                  { value: 'other', label: 'Other' },
+                ]}
+              />
             </div>
 
-            <form onSubmit={handleSubmit} className="p-8 flex flex-col gap-6 bg-bg-primary">
-              <div>
-                <label className="block text-sm font-bold text-white/80 mb-2">Description</label>
-                <div className="relative">
-                  <FileText size={18} className="absolute left-5 top-4 text-white/30" />
-                  <input 
-                    type="text" 
-                    className="w-full pl-12 pr-5 py-3.5 rounded-[32px] bg-white/5 border border-white/10 focus:border-primary outline-none transition-all font-medium"
-                    placeholder="e.g. Purchase of organic fertilizers"
-                    value={formData.description}
-                    onChange={(e) => setFormData({...formData, description: e.target.value})}
-                    required
-                  />
-                </div>
+            <div>
+              <label className="block text-sm font-bold text-white/80 mb-2">Amount (Rs.)</label>
+              <div className="relative">
+                <DollarSign size={18} className="absolute left-5 top-4 text-white/30" />
+                <input 
+                  type="number" 
+                  className="w-full pl-12 pr-5 py-3.5 rounded-[24px] bg-white/5 border border-white/10 focus:border-primary outline-none transition-all font-medium text-white"
+                  placeholder="0.00"
+                  value={formData.amount}
+                  onChange={(e) => setFormData({...formData, amount: e.target.value})}
+                  required
+                />
               </div>
-
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-bold text-white/80 mb-2">Category</label>
-                  <div className="relative">
-                    <Tag size={18} className="absolute left-5 top-4 text-white/30" />
-                      <select 
-                        className="w-full pl-12 pr-5 py-3.5 rounded-[32px] bg-white/5 border border-white/10 focus:border-primary outline-none transition-all font-medium appearance-none"
-                        value={formData.category}
-                        onChange={(e) => setFormData({...formData, category: e.target.value})}
-                      >
-                        <option value="seeds">Seeds</option>
-                        <option value="fertilizer">Fertilizer</option>
-                        <option value="labor">Labor</option>
-                        <option value="equipment">Equipment</option>
-                        <option value="fuel">Fuel</option>
-                        <option value="water">Water</option>
-                        <option value="other">Other</option>
-                      </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-white/80 mb-2">Amount (Rs.)</label>
-                  <div className="relative">
-                    <DollarSign size={18} className="absolute left-5 top-4 text-white/30" />
-                    <input 
-                      type="number" 
-                      className="w-full pl-12 pr-5 py-3.5 rounded-[32px] bg-white/5 border border-white/10 focus:border-primary outline-none transition-all font-medium"
-                      placeholder="0.00"
-                      value={formData.amount}
-                      onChange={(e) => setFormData({...formData, amount: e.target.value})}
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-white/80 mb-2">Transaction Date</label>
-                <div className="relative">
-                  <Calendar size={18} className="absolute left-5 top-4 text-white/30" />
-                  <input 
-                    type="date" 
-                    className="w-full pl-12 pr-5 py-3.5 rounded-[32px] bg-white/5 border border-white/10 focus:border-primary outline-none transition-all font-medium"
-                    value={formData.date}
-                    onChange={(e) => setFormData({...formData, date: e.target.value})}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-4 mt-4">
-                <button 
-                  type="button" 
-                  onClick={() => setIsModalOpen(false)}
-                  className="flex-1 py-4 rounded-[32px] font-bold text-white/40 hover:bg-white/5 transition-all"
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit" 
-                  className="flex-1 bg-primary text-black py-4 rounded-[32px] font-bold hover:brightness-110 transition-all"
-                >
-                  Record Expense
-                </button>
-              </div>
-            </form>
+            </div>
           </div>
-        </div>
-      )}
+
+          <div>
+            <label className="block text-sm font-bold text-white/80 mb-2">Transaction Date</label>
+            <div className="relative">
+              <Calendar size={18} className="absolute left-5 top-4 text-white/30" />
+              <input 
+                type="date" 
+                className="w-full pl-12 pr-5 py-3.5 rounded-[24px] bg-white/5 border border-white/10 focus:border-primary outline-none transition-all font-medium text-white"
+                value={formData.date}
+                onChange={(e) => setFormData({...formData, date: e.target.value})}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-4 mt-4">
+            <button 
+              type="button" 
+              onClick={() => setIsModalOpen(false)}
+              className="flex-1 py-4 rounded-full font-bold text-white/40 hover:bg-white/5 transition-all"
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit" 
+              className="flex-1 bg-primary text-black py-4 rounded-full font-bold hover:brightness-110 transition-all"
+            >
+              Record Expense
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };

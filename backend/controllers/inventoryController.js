@@ -1,7 +1,7 @@
 const Inventory = require('../models/Inventory');
 const Product = require('../models/Product');
 
-// Create inventory entry
+
 exports.createInventory = async (req, res) => {
   try {
     const { product, quantity, unit, warehouseLocation, expiryDate, batchNumber, quality, notes } = req.body;
@@ -10,14 +10,14 @@ exports.createInventory = async (req, res) => {
       return res.status(400).json({ message: 'Please provide product and quantity' });
     }
 
-    // Check if product exists and belongs to farmer
+    
     const prod = await Product.findById(product);
-    if (!prod || prod.farmer.toString() !== req.user.id) {
+    if (!prod || (req.user.role !== 'admin' && prod.farmer.toString() !== req.farmerId?.toString())) {
       return res.status(404).json({ message: 'Product not found or you do not own it' });
     }
 
     const inventory = await Inventory.create({
-      farmer: req.user.id,
+      farmer: req.farmerId || req.user.id,
       product,
       quantity,
       unit,
@@ -39,10 +39,10 @@ exports.createInventory = async (req, res) => {
   }
 };
 
-// Get my inventory
+
 exports.getMyInventory = async (req, res) => {
   try {
-    const inventory = await Inventory.find({ farmer: req.user.id })
+    const inventory = await Inventory.find({ farmer: req.farmerId })
       .populate('product', 'name category price')
       .sort({ lastRestockedDate: -1 });
 
@@ -56,7 +56,7 @@ exports.getMyInventory = async (req, res) => {
   }
 };
 
-// Get inventory item
+
 exports.getInventoryById = async (req, res) => {
   try {
     const inventory = await Inventory.findById(req.params.id)
@@ -66,7 +66,7 @@ exports.getInventoryById = async (req, res) => {
       return res.status(404).json({ message: 'Inventory not found' });
     }
 
-    if (inventory.farmer.toString() !== req.user.id) {
+    if (req.user.role !== 'admin' && inventory.farmer.toString() !== req.farmerId?.toString()) {
       return res.status(403).json({ message: 'Not authorized to view this inventory' });
     }
 
@@ -79,7 +79,7 @@ exports.getInventoryById = async (req, res) => {
   }
 };
 
-// Update inventory
+
 exports.updateInventory = async (req, res) => {
   try {
     let inventory = await Inventory.findById(req.params.id);
@@ -88,7 +88,7 @@ exports.updateInventory = async (req, res) => {
       return res.status(404).json({ message: 'Inventory not found' });
     }
 
-    if (inventory.farmer.toString() !== req.user.id) {
+    if (req.user.role !== 'admin' && inventory.farmer.toString() !== req.farmerId?.toString()) {
       return res.status(403).json({ message: 'Not authorized to update this inventory' });
     }
 
@@ -106,7 +106,7 @@ exports.updateInventory = async (req, res) => {
   }
 };
 
-// Delete inventory
+
 exports.deleteInventory = async (req, res) => {
   try {
     const inventory = await Inventory.findById(req.params.id);
@@ -115,7 +115,7 @@ exports.deleteInventory = async (req, res) => {
       return res.status(404).json({ message: 'Inventory not found' });
     }
 
-    if (inventory.farmer.toString() !== req.user.id) {
+    if (req.user.role !== 'admin' && inventory.farmer.toString() !== req.farmerId?.toString()) {
       return res.status(403).json({ message: 'Not authorized to delete this inventory' });
     }
 

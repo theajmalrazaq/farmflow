@@ -5,7 +5,20 @@ interface User {
   id: string;
   name: string;
   email: string;
-  role: 'customer' | 'farmer' | 'admin';
+  role: 'customer' | 'farmer' | 'admin' | 'employee';
+  farmName?: string;
+  farmSlug?: string;
+  farmDescription?: string;
+  address?: string;
+  coverImage?: string;
+  logo?: string;
+  permissions?: {
+    dashboard?: boolean;
+    inventory?: boolean;
+    crops?: boolean;
+    cattle?: boolean;
+    expenses?: boolean;
+  };
 }
 
 interface AuthContextType {

@@ -2,26 +2,30 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import apiClient from '../api/client';
 import { MapPin, ArrowRight, Loader2, Search, Filter } from 'lucide-react';
+import Dropdown from '../components/Dropdown';
 
 const Discover = () => {
   const [farms, setFarms] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [region, setRegion] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
+  const fetchFarms = async () => {
+    setLoading(true);
+    try {
+      const res = await apiClient.get('/farms', { params: { region } });
+      setFarms(res.data.farms || []);
+    } catch (err) {
+      console.error('Failed to fetch farms', err);
+      setFarms([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchFarms = async () => {
-      try {
-        const res = await apiClient.get('/farms');
-        setFarms(res.data.farms || []);
-      } catch (err) {
-        console.error('Failed to fetch farms', err);
-        setFarms([]);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchFarms();
-  }, []);
+  }, [region]);
 
   const filteredFarms = farms.filter(f => 
     f.farmName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -46,14 +50,29 @@ const Discover = () => {
             <input 
               type="text" 
               placeholder="Search by farm name or location..." 
-              className="w-full bg-bg-primary border border-white/10 rounded-full py-4 pl-12 pr-4 focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/5 text-white transition-all"
+              className="w-full h-14 bg-bg-primary border border-white/10 rounded-full pl-12 pr-4 focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/5 text-white transition-all"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <button className="bg-white/5 border border-white/10 text-white px-8 py-4 rounded-full flex items-center gap-2 hover:bg-white/10 transition-all font-bold">
-            <Filter size={18} /> All Regions
-          </button>
+          <div className="min-w-[200px]">
+            <Dropdown 
+              value={region === 'all' ? 'All Regions' : region}
+              onChange={(val) => setRegion(val)}
+              size="lg"
+              icon={<Filter size={18} />}
+              options={[
+                { value: 'all', label: 'All Regions' },
+                { value: 'Punjab', label: 'Punjab' },
+                { value: 'Sindh', label: 'Sindh' },
+                { value: 'KPK', label: 'KPK' },
+                { value: 'Balochistan', label: 'Balochistan' },
+                { value: 'Gilgit', label: 'Gilgit-Baltistan' },
+                { value: 'Kashmir', label: 'Kashmir' },
+                { value: 'Islamabad', label: 'Islamabad' },
+              ]}
+            />
+          </div>
         </div>
 
         {loading ? (

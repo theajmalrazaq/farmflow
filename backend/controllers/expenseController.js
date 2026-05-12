@@ -1,6 +1,6 @@
 const Expense = require('../models/Expense');
 
-// Create expense
+
 exports.createExpense = async (req, res) => {
   try {
     const { category, amount, currency, description, date, crop, vendor, invoice, notes } = req.body;
@@ -10,7 +10,7 @@ exports.createExpense = async (req, res) => {
     }
 
     const expense = await Expense.create({
-      farmer: req.user.id,
+      farmer: req.farmerId || req.user.id,
       category,
       amount,
       currency,
@@ -31,11 +31,11 @@ exports.createExpense = async (req, res) => {
   }
 };
 
-// Get my expenses
+
 exports.getMyExpenses = async (req, res) => {
   try {
     const { category, startDate, endDate, crop } = req.query;
-    let filter = { farmer: req.user.id };
+    let filter = { farmer: req.farmerId };
 
     if (category) filter.category = category;
     if (crop) filter.crop = crop;
@@ -49,7 +49,7 @@ exports.getMyExpenses = async (req, res) => {
       .populate('crop', 'name cropType')
       .sort({ date: -1 });
 
-    // Calculate total expenses
+    
     const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
 
     res.status(200).json({
@@ -63,7 +63,7 @@ exports.getMyExpenses = async (req, res) => {
   }
 };
 
-// Get expense by ID
+
 exports.getExpenseById = async (req, res) => {
   try {
     const expense = await Expense.findById(req.params.id)
@@ -73,7 +73,7 @@ exports.getExpenseById = async (req, res) => {
       return res.status(404).json({ message: 'Expense not found' });
     }
 
-    if (expense.farmer.toString() !== req.user.id) {
+    if (req.user.role !== 'admin' && expense.farmer.toString() !== req.farmerId?.toString()) {
       return res.status(403).json({ message: 'Not authorized to view this expense' });
     }
 
@@ -86,7 +86,7 @@ exports.getExpenseById = async (req, res) => {
   }
 };
 
-// Update expense
+
 exports.updateExpense = async (req, res) => {
   try {
     let expense = await Expense.findById(req.params.id);
@@ -95,7 +95,7 @@ exports.updateExpense = async (req, res) => {
       return res.status(404).json({ message: 'Expense not found' });
     }
 
-    if (expense.farmer.toString() !== req.user.id) {
+    if (req.user.role !== 'admin' && expense.farmer.toString() !== req.farmerId?.toString()) {
       return res.status(403).json({ message: 'Not authorized to update this expense' });
     }
 
@@ -113,7 +113,7 @@ exports.updateExpense = async (req, res) => {
   }
 };
 
-// Delete expense
+
 exports.deleteExpense = async (req, res) => {
   try {
     const expense = await Expense.findById(req.params.id);
@@ -122,7 +122,7 @@ exports.deleteExpense = async (req, res) => {
       return res.status(404).json({ message: 'Expense not found' });
     }
 
-    if (expense.farmer.toString() !== req.user.id) {
+    if (req.user.role !== 'admin' && expense.farmer.toString() !== req.farmerId?.toString()) {
       return res.status(403).json({ message: 'Not authorized to delete this expense' });
     }
 
@@ -137,10 +137,10 @@ exports.deleteExpense = async (req, res) => {
   }
 };
 
-// Get expense summary (by category)
+
 exports.getExpenseSummary = async (req, res) => {
   try {
-    const expenses = await Expense.find({ farmer: req.user.id });
+    const expenses = await Expense.find({ farmer: req.farmerId });
 
     const summary = {};
     expenses.forEach((exp) => {

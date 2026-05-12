@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const cattleSchema = new mongoose.Schema({
   type: {
     type: String,
-    required: true, // e.g. Cow, Sheep, Goat
+    required: true, 
   },
   count: {
     type: Number,

@@ -55,7 +55,7 @@ const Register = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-[radial-gradient(circle_at_top_right,var(--color-primary-glow),transparent),radial-gradient(circle_at_bottom_left,var(--color-secondary-glow),transparent),#050505]">
-      <div className="w-full max-w-[480px] p-10 rounded-[32px] bg-bg-primary/5 backdrop-blur-xl border border-white/10 flex flex-col gap-8">
+      <div className="w-full max-w-120 p-10 rounded-4xl bg-bg-primary/5 backdrop-blur-xl border border-white/10 flex flex-col gap-8">
         <div className="flex flex-col items-center text-center">
           <Link to="/" className="flex items-center">
             <img src="/logo.png" alt="FarmFlow" className="h-12 w-auto mb-2" />
@@ -222,7 +222,7 @@ const Register = () => {
                 <Button 
                   type="submit" 
                   isLoading={loading}
-                  className="flex-[2]"
+                  className="flex-2"
                   leftIcon={<UserPlus size={20} />}
                 >
                   Complete Signup

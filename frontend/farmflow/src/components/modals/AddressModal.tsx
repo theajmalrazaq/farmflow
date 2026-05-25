@@ -42,7 +42,7 @@ const AddressModal: React.FC<AddressModalProps> = ({
             <MapPin size={24} />
           </div>
           <textarea
-            className="w-full min-h-[120px] bg-white/5 border border-white/10 rounded-[24px] pl-14 pr-6 py-5 focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/5 text-white font-medium transition-all resize-none"
+            className="w-full min-h-30 bg-white/5 border border-white/10 rounded-3xl pl-14 pr-6 py-5 focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/5 text-white font-medium transition-all resize-none"
             placeholder="House #, Street name, Area, City..."
             value={address}
             onChange={(e) => setAddress(e.target.value)}

@@ -36,7 +36,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   return (
     <ToastContext.Provider value={{ showToast, removeToast }}>
       {children}
-      <div className="fixed bottom-8 right-8 z-[200] flex flex-col gap-3 pointer-events-none">
+      <div className="fixed bottom-8 right-8 z-200 flex flex-col gap-3 pointer-events-none">
         {toasts.map((toast) => (
           <ToastItem key={toast.id} toast={toast} onClose={() => removeToast(toast.id)} />
         ))}
@@ -65,11 +65,11 @@ const ToastItem: React.FC<{ toast: Toast; onClose: () => void }> = ({ toast, onC
       className={`pointer-events-auto flex items-center gap-3 px-5 py-4 rounded-2xl border backdrop-blur-xl animate-in slide-in-from-right-full fade-in duration-500 shadow-2xl ${bgColors[toast.type]}`}
       style={{ minWidth: '300px', maxWidth: '450px' }}
     >
-      <div className="flex-shrink-0">{icons[toast.type]}</div>
+      <div className="shrink-0">{icons[toast.type]}</div>
       <p className="text-sm font-bold text-white flex-1">{toast.message}</p>
       <button 
         onClick={onClose}
-        className="flex-shrink-0 p-1 hover:bg-white/10 rounded-lg transition-colors text-white/30 hover:text-white"
+        className="shrink-0 p-1 hover:bg-white/10 rounded-lg transition-colors text-white/30 hover:text-white"
       >
         <X size={16} />
       </button>
@@ -77,6 +77,7 @@ const ToastItem: React.FC<{ toast: Toast; onClose: () => void }> = ({ toast, onC
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useToast = () => {
   const context = useContext(ToastContext);
   if (context === undefined) {

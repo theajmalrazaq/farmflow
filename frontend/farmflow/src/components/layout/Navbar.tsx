@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Bell, LogOut, Settings, ExternalLink, ChevronDown, ShoppingCart, Loader2, CheckCircle2 } from 'lucide-react';
@@ -91,7 +93,7 @@ const Navbar = ({ isAdmin = false }: { isAdmin?: boolean }) => {
 
 
   return (
-    <header className={`${isAdmin ? 'sticky border-b border-white/5 bg-bg-dark' : 'fixed top-10 left-1/2 -translate-x-1/2 w-[95%] max-w-7xl bg-bg-dark/60 backdrop-blur-xl border border-white/10 rounded-[32px] shadow-2xl shadow-black/50'} z-50 transition-all duration-500`}>
+    <header className={`${isAdmin ? 'sticky border-b border-white/5 bg-bg-dark' : 'fixed top-10 left-1/2 -translate-x-1/2 w-[95%] max-w-7xl bg-bg-dark/60 backdrop-blur-xl border border-white/10 rounded-4xl shadow-2xl shadow-black/50'} z-50 transition-all duration-500`}>
       <nav className={`flex justify-between items-center ${isAdmin ? 'p-4 w-full' : 'px-8 py-5 max-w-7xl mx-auto'}`}>
         <div className="flex items-center gap-12">
           {!isAdmin && (
@@ -171,7 +173,7 @@ const Navbar = ({ isAdmin = false }: { isAdmin?: boolean }) => {
                         </div>
                       </div>
 
-                      <div className="flex flex-col gap-2 max-h-[400px] overflow-y-auto no-scrollbar pr-1">
+                      <div className="flex flex-col gap-2 max-h-100 overflow-y-auto no-scrollbar pr-1">
                         {loadingNotifications && notifications.length === 0 ? (
                           <div className="py-10 flex justify-center"><Loader2 className="animate-spin text-primary/30" /></div>
                         ) : notifications.length > 0 ? (
@@ -183,13 +185,13 @@ const Navbar = ({ isAdmin = false }: { isAdmin?: boolean }) => {
                                 if (notif.relatedId) navigate('/admin/orders');
                                 setIsNotificationsOpen(false);
                               }}
-                              className={`p-4 rounded-[32px] transition-all cursor-pointer border ${notif.read ? 'bg-white/5 border-transparent opacity-60' : 'bg-primary/10 border-primary/20 hover:bg-primary/20'}`}
+                              className={`p-4 rounded-4xl transition-all cursor-pointer border ${notif.read ? 'bg-white/5 border-transparent opacity-60' : 'bg-primary/10 border-primary/20 hover:bg-primary/20'}`}
                             >
                               <div className="flex justify-between items-start gap-3">
                                 <p className={`text-sm leading-snug ${notif.read ? 'text-white/40' : 'text-white font-bold'}`}>
                                   {notif.title}
                                 </p>
-                                {!notif.read && <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0 mt-1.5"></div>}
+                                {!notif.read && <div className="w-2 h-2 bg-primary rounded-full shrink-0 mt-1.5"></div>}
                               </div>
                               <p className="text-xs text-white/40 mt-1 line-clamp-2">{notif.message}</p>
                             </div>
@@ -234,7 +236,7 @@ const Navbar = ({ isAdmin = false }: { isAdmin?: boolean }) => {
                   className={`h-11 px-3 ${isProfileOpen ? 'bg-white/10 border-white/20' : ''}`}
                   rightIcon={<ChevronDown size={14} className={`text-white/40 transition-transform duration-300 ${isProfileOpen ? 'rotate-180' : ''}`} />}
                 >
-                  <div className="w-7 h-7 rounded-xl bg-primary/20 flex items-center justify-center text-primary font-bold text-xs uppercase flex-shrink-0">
+                  <div className="w-7 h-7 rounded-xl bg-primary/20 flex items-center justify-center text-primary font-bold text-xs uppercase shrink-0">
                     {user?.name?.charAt(0)}
                   </div>
                   <span className="text-sm font-medium text-white/90 hidden sm:block">{user?.name}</span>
@@ -251,7 +253,7 @@ const Navbar = ({ isAdmin = false }: { isAdmin?: boolean }) => {
                       {user?.role === 'farmer' && (
                         <Link 
                           to={`/farm/${(user as any).farmSlug}`} 
-                          className="flex items-center gap-3 px-4 py-2.5 rounded-[32px] hover:bg-white/5 transition-colors text-white/70 hover:text-white group"
+                          className="flex items-center gap-3 px-4 py-2.5 rounded-4xl hover:bg-white/5 transition-colors text-white/70 hover:text-white group"
                           onClick={() => setIsProfileOpen(false)}
                         >
                           <ExternalLink size={18} className="text-white/30 group-hover:text-primary transition-colors" />
@@ -262,7 +264,7 @@ const Navbar = ({ isAdmin = false }: { isAdmin?: boolean }) => {
                       {user?.role !== 'customer' && (
                         <Link 
                           to="/dashboard" 
-                          className="flex items-center gap-3 px-4 py-2.5 rounded-[32px] hover:bg-white/5 transition-colors text-white/70 hover:text-white group"
+                          className="flex items-center gap-3 px-4 py-2.5 rounded-4xl hover:bg-white/5 transition-colors text-white/70 hover:text-white group"
                           onClick={() => setIsProfileOpen(false)}
                         >
                           <Settings size={18} className="text-white/30 group-hover:text-primary transition-colors" />

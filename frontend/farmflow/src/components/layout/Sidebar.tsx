@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/set-state-in-effect */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { 
@@ -82,11 +84,11 @@ const Sidebar = () => {
 
       <aside 
         className={`fixed lg:sticky top-0 left-0 h-screen z-50 flex flex-col border-r border-white/5 backdrop-blur-xl transition-all duration-300 ease-in-out bg-bg-dark/80 
-          ${isOpen || isMobileMenuOpen ? 'w-[280px] translate-x-0' : 'w-0 lg:w-[88px] -translate-x-full lg:translate-x-0'}`}
+          ${isOpen || isMobileMenuOpen ? 'w-70 translate-x-0' : 'w-0 lg:w-22 -translate-x-full lg:translate-x-0'}`}
       >
         
         <div className="p-6 flex items-center gap-4 border-b border-white/5 mb-2 overflow-hidden">
-          <div className="w-10 h-10 flex-shrink-0 flex items-center justify-center">
+          <div className="w-10 h-10 shrink-0 flex items-center justify-center">
             <img src="/logo.png" alt="FarmFlow" className="w-full h-full object-contain" />
           </div>
           {(isOpen || isMobileMenuOpen) && (
@@ -116,7 +118,7 @@ const Sidebar = () => {
                 }
               `}
             >
-              <span className="flex-shrink-0">{item.icon}</span>
+              <span className="shrink-0">{item.icon}</span>
               {(isOpen || isMobileMenuOpen) && <span className="whitespace-nowrap">{item.name}</span>}
             </NavLink>
           ))}

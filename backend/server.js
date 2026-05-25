@@ -46,20 +46,20 @@ app.use('/api/notifications', notificationRoutes);
 
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => {
-    console.log('✅ MongoDB connected successfully!');
+    console.log('MongoDB connected successfully!');
     
     app.listen(PORT, () => {
       console.log(`🚀 Server is running on port ${PORT}`);
     });
   })
   .catch(async err => {
-    console.error('❌ MongoDB connection error:', err.message);
+    console.error('MongoDB connection error:', err.message);
     try {
       const { execSync } = require('child_process');
       const ip = execSync('curl -s ifconfig.me').toString().trim();
-      console.log(`👉 Please whitelist this IP in MongoDB Atlas: ${ip}`);
+      console.log(`Please whitelist this IP in MongoDB Atlas: ${ip}`);
     } catch (ipErr) {
-      console.log('👉 Please check your MongoDB Atlas IP whitelist.');
+      console.log('Please check your MongoDB Atlas IP whitelist.');
     }
     process.exit(1);
   });
